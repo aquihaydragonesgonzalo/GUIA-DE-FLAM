@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>Flåm Guide 2026</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+    <meta name="theme-color" content="#2A5B87" />
+    <meta name="description" content="Guía turística interactiva para Flåm 2026" />
+    
+    <!-- PWA -->
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/201/201623.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              fjord: { 50:'#f0f9ff', 100:'#e0f2fe', 500:'#2A5B87', 600:'#0284c7', 900:'#0c4a6e' },
+              mountain: { 500:'#3A7D44' },
+              sunset: { 500:'#FFB347' }
+            },
+            fontFamily: { sans: ['Roboto Condensed', 'sans-serif'] }
+          }
+        }
+      }
+    </script>
+    
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Babel para compilar React en el navegador -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Import Map LIMPIO (Solo versiones compatibles) -->
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.263.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
+    "leaflet": "https://aistudiocdn.com/leaflet@^1.9.4"
+  }
+}
+</script>
+    
+    <!-- Leaflet Global -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        body { background-color: #f8fafc; overscroll-behavior-y: none; }
+        .leaflet-container { width: 100%; height: 100%; z-index: 0; }
+        /* Hide scrollbar for clean UI */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- MAIN APP SCRIPT -->
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useMemo, useRef } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow } from 'lucide-react';
+
+        // --- CONSTANTS & DATA ---
+        const SHIP_DEPARTURE_TIME = "17:30";
+        const COORDS = {
+            FLAM_DOCK: { lat: 60.8638, lng: 7.1187 },
+            FLAM_STATION: { lat: 60.8632, lng: 7.1145 },
+            MYRDAL: { lat: 60.7353, lng: 7.1226 },
+            AEGIR_PUB: { lat: 60.8638, lng: 7.1172 },
+            GUDVANGEN: { lat: 60.8812, lng: 6.8413 },
+            STEGASTEIN_VIEWPOINT: { lat: 60.9085, lng: 7.2123 },
+            VISITOR_CENTER: { lat: 60.8622, lng: 7.1115 }
+        };
+
+        const INITIAL_ITINERARY = [
+            {
+                id: '1', title: 'Desembarque y Orientación', startTime: '07:00', endTime: '07:20',
+                locationName: 'Muelle de Cruceros', coords: COORDS.FLAM_DOCK,
+                description: 'Flåm estará casi vacío. El aire de la mañana es fresco.',
+                keyDetails: 'Aprovecha para sacar fotos del barco y el fiordo.',
+                priceNOK: 0, priceEUR: 0, type: 'logistics', completed: false, notes: 'Webcam disponible',
+                webcamUrl: 'https://www.norwaysbest.com/es/flam/webcam-de-flam'
+            },
+            {
+                id: '2', title: 'El Tren (Flåmsbana)', startTime: '07:30', endTime: '09:30',
+                locationName: 'Estación de Flåm', endLocationName: 'Estación Myrdal',
+                coords: COORDS.FLAM_STATION, endCoords: COORDS.MYRDAL,
+                description: 'Considerado uno de los viajes en tren más bonitos del mundo.',
+                keyDetails: '¡Toma el primer tren! Asientos: Izquierda subida, derecha bajada.',
+                priceNOK: 750, priceEUR: 65, type: 'transport', completed: false, notes: 'Parada en cascada Kjosfossen'
+            },
+            {
+                id: '3', title: 'Almuerzo en Ægir BrewPub', startTime: '10:00', endTime: '11:30',
+                locationName: 'Ægir BrewPub', coords: COORDS.AEGIR_PUB,
+                description: 'Edificio vikingo. Chimenea central de 9 metros.',
+                keyDetails: '¡Tiempo para el festín! El pub abre antes en días de crucero.',
+                priceNOK: 500, priceEUR: 43, type: 'food', completed: false
+            },
+            {
+                id: '4', title: 'Fjord Cruise + Bus', startTime: '12:00', endTime: '14:30',
+                locationName: 'Puerto Flåm', endLocationName: 'Gudvangen',
+                coords: COORDS.FLAM_DOCK, endCoords: COORDS.GUDVANGEN,
+                description: 'Navegarás por el Nærøyfjord (UNESCO).',
+                keyDetails: 'Salida barco eléctrico 12:00. Regreso en shuttle bus.',
+                priceNOK: 1100, priceEUR: 95, type: 'sightseeing', completed: false
+            },
+            {
+                id: '5', title: 'Mirador Stegastein', startTime: '15:00', endTime: '16:30',
+                locationName: 'Parada Bus Flåm', endLocationName: 'Mirador Stegastein',
+                coords: COORDS.FLAM_STATION, endCoords: COORDS.STEGASTEIN_VIEWPOINT,
+                description: 'Plataforma a 650m sobre el fiordo.',
+                keyDetails: 'Toma el bus a las 15:00. Vistas espectaculares.',
+                priceNOK: 410, priceEUR: 36, type: 'sightseeing', completed: false
+            },
+            {
+                id: '6', title: 'Compras y Relax', startTime: '16:30', endTime: '17:00',
+                locationName: 'Centro de Visitantes', coords: COORDS.VISITOR_CENTER,
+                description: 'Tiendas de souvenirs y artesanías.',
+                keyDetails: 'Último café. Estás a pasos del muelle.',
+                priceNOK: 0, priceEUR: 0, type: 'shopping', completed: false
+            },
+            {
+                id: '7', title: 'Regreso al Barco', startTime: '17:00', endTime: '17:30',
+                locationName: 'Muelle', coords: COORDS.FLAM_DOCK,
+                description: 'Hora límite de embarque 17:30.',
+                keyDetails: 'Debes estar en el muelle a las 17:00.',
+                priceNOK: 0, priceEUR: 0, type: 'logistics', completed: false, notes: 'CRITICAL'
+            }
+        ];
+
+        const PRONUNCIATIONS = [
+            { word: 'Flåm', phonetic: '/floːm/', simplified: 'FLOUM', meaning: 'Llanura pequeña' },
+            { word: 'Flåmsbana', phonetic: '/flɔmsbɑːnɑ/', simplified: 'FLOM-baana', meaning: 'Tren de Flåm' },
+            { word: 'Myrdal', phonetic: '/myːrdɑl/', simplified: 'MÜR-dal', meaning: 'Valle pantanoso' },
+            { word: 'Ægir', phonetic: '/ˈɛːjiɾ/', simplified: 'ÉG-uir', meaning: 'Gigante del mar' },
+            { word: 'Nærøyfjord', phonetic: '/ˈnɛːrœɪfjɔr/', simplified: 'NEHR-oy-fiuord', meaning: 'Fiordo estrecho' },
+            { word: 'Stegastein', phonetic: '/ˈstɛgɑstɑɪn/', simplified: 'STÉ-ga-stain', meaning: 'Piedra del sendero' },
+            { word: 'Gudvangen', phonetic: '/ˈgʉdʋɑŋən/', simplified: 'GÜD-vang-en', meaning: 'Campo de los dioses' },
+            { word: 'Takk', phonetic: '/tak/', simplified: 'TAK', meaning: 'Gracias' },
+        ];
+
+        // --- UTILS ---
+        const calculateDistance = (c1, c2) => {
+            if(!c1 || !c2) return 0;
+            const R = 6371e3; 
+            const φ1 = c1.lat * Math.PI/180;
+            const φ2 = c2.lat * Math.PI/180;
+            const Δφ = (c2.lat-c1.lat) * Math.PI/180;
+            const Δλ = (c2.lng-c1.lng) * Math.PI/180;
+            const a = Math.sin(Δφ/2)*Math.sin(Δφ/2) + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)*Math.sin(Δλ/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        };
+
+        const formatDistance = (meters) => {
+            if (meters < 1000) return `${Math.round(meters)} m`;
+            return `${(meters / 1000).toFixed(1)} km`;
+        };
+
+        const formatTimeRemaining = (targetTimeStr) => {
+            const now = new Date();
+            const [h, m] = targetTimeStr.split(':').map(Number);
+            const target = new Date(now); target.setHours(h, m, 0, 0);
+            if(target < now) return "Terminado";
+            const diffMs = target - now;
+            const dh = Math.floor(diffMs/(1000*60*60));
+            const dm = Math.floor((diffMs%(1000*60*60))/(1000*60));
+            return dh > 0 ? `${dh}h ${dm}m` : `${dm}m`;
+        };
+
+        const calculateDuration = (start, end) => {
+            const [sh, sm] = start.split(':').map(Number);
+            const [eh, em] = end.split(':').map(Number);
+            let diff = (eh*60+em) - (sh*60+sm);
+            if(diff < 0) diff += 24*60;
+            const h = Math.floor(diff/60);
+            const m = diff%60;
+            return h > 0 && m > 0 ? `${h}h ${m}m` : (h > 0 ? `${h}h` : `${m} min`);
+        };
+
+        // --- COMPONENTS ---
+
+        const Timeline = ({ itinerary, onToggleComplete, onLocate, userLocation }) => {
+            return (
+                <div className="pb-24 px-4 pt-4 max-w-lg mx-auto">
+                    <h2 className="text-2xl font-bold text-fjord-500 mb-6">Itinerario Lujo Matutino</h2>
+                    <div className="relative border-l-2 border-fjord-200 ml-3 space-y-8">
+                        {itinerary.map((act) => {
+                            const duration = calculateDuration(act.startTime, act.endTime);
+                            const isCritical = act.notes === 'CRITICAL';
+                            const dist = userLocation ? calculateDistance(userLocation, act.coords) : null;
+                            
+                            return (
+                                <div key={act.id} className="mb-8 ml-6 relative">
+                                    <div className={`absolute -left-[31px] top-0 rounded-full bg-white border-2 cursor-pointer ${act.completed ? 'border-emerald-500 text-emerald-500' : 'border-fjord-500 text-fjord-500'}`}
+                                         onClick={() => onToggleComplete(act.id)}>
+                                        {act.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+                                    </div>
+                                    <div className={`p-4 rounded-lg border shadow-sm transition-all ${act.completed ? 'bg-emerald-50 border-emerald-500' : (isCritical ? 'bg-red-50 border-red-500' : 'bg-white border-fjord-100')}`}>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div>
+                                                <div className="flex items-center space-x-2 mb-1">
+                                                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-fjord-100 text-fjord-700">{act.startTime} - {act.endTime}</span>
+                                                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border">{duration}</span>
+                                                </div>
+                                                <h3 className="font-bold text-lg text-gray-800 leading-tight">{act.title}</h3>
+                                            </div>
+                                            {isCritical && <AlertTriangle className="text-red-500 animate-pulse" size={20} />}
+                                        </div>
+                                        <div className="mb-3 text-sm text-gray-600 flex items-center flex-wrap gap-1">
+                                            <span className="font-medium flex items-center"><MapPin size={14} className="mr-0.5 text-fjord-500"/> {act.locationName}</span>
+                                            {dist !== null && (
+                                                <span className="ml-2 text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold border border-emerald-200">
+                                                    A {formatDistance(dist)}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-sm text-gray-600 mb-3">{act.description}</p>
+                                        <div className="bg-slate-50 p-3 rounded text-sm text-slate-700 italic border-l-4 border-sunset-500 mb-4">"{act.keyDetails}"</div>
+                                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                                            <div className="flex items-center space-x-3">
+                                                <button onClick={() => onLocate(act.coords, act.endCoords)} className="flex items-center text-xs font-medium text-fjord-600 bg-fjord-50 px-2 py-1 rounded hover:bg-fjord-100">
+                                                    <MapPin size={14} className="mr-1" /> {act.endCoords ? 'Ruta' : 'Mapa'}
+                                                </button>
+                                                {act.webcamUrl && (
+                                                    <a href={act.webcamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 hover:bg-red-100">
+                                                        <Camera size={14} className="mr-1" /> Webcam
+                                                    </a>
+                                                )}
+                                            </div>
+                                            <button onClick={() => onToggleComplete(act.id)} className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${act.completed ? 'bg-emerald-100 text-emerald-700' : 'bg-fjord-500 text-white'}`}>
+                                                {act.completed ? 'Listo' : 'Check-in'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        const Budget = ({ itinerary, onToggleComplete }) => {
+            const [curr, setCurr] = useState('EUR');
+            const COLORS = ['#2A5B87', '#3A7D44', '#FFB347', '#94a3b8'];
+            const paid = useMemo(() => itinerary.filter(a => a.priceEUR > 0), [itinerary]);
+            
+            // Total Planeado
+            const totalEstimated = useMemo(() => paid.reduce((acc, c) => acc + (curr === 'EUR' ? c.priceEUR : c.priceNOK), 0), [paid, curr]);
+            
+            // Total Gastado (Completado)
+            const totalSpent = useMemo(() => paid.filter(a => a.completed).reduce((acc, c) => acc + (curr === 'EUR' ? c.priceEUR : c.priceNOK), 0), [paid, curr]);
+            
+            // Percentage
+            const percentage = totalEstimated > 0 ? Math.min(100, Math.round((totalSpent / totalEstimated) * 100)) : 0;
+
+            return (
+                <div className="pb-24 px-4 pt-6 max-w-lg mx-auto h-full overflow-y-auto">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-fjord-500 flex items-center"><Wallet className="mr-2"/> Gastos</h2>
+                        <div className="flex bg-slate-200 rounded-lg p-1">
+                            {['EUR','NOK'].map(c => (
+                                <button key={c} onClick={() => setCurr(c)} className={`px-3 py-1 text-sm rounded-md font-bold ${curr===c?'bg-white shadow text-fjord-600':'text-slate-500'}`}>{c}</button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Cards Resumen */}
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="bg-white rounded-xl p-4 shadow border border-slate-100">
+                            <p className="text-slate-500 text-xs uppercase font-bold">Gastado (Real)</p>
+                            <div className="text-2xl font-bold text-emerald-600 mt-1">{curr === 'EUR' ? `€${totalSpent}` : `${totalSpent} kr`}</div>
+                        </div>
+                        <div className="bg-slate-50 rounded-xl p-4 shadow-sm border border-slate-100">
+                            <p className="text-slate-400 text-xs uppercase font-bold">Presupuesto</p>
+                            <div className="text-2xl font-bold text-slate-700 mt-1">{curr === 'EUR' ? `€${totalEstimated}` : `${totalEstimated} kr`}</div>
+                        </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="mb-2 flex justify-between text-xs font-bold text-slate-500">
+                        <span>Progreso de Gasto</span>
+                        <span>{percentage}%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-4 mb-8 overflow-hidden shadow-inner">
+                        <div className="bg-emerald-500 h-4 rounded-full transition-all duration-700 ease-out" style={{ width: `${percentage}%` }}></div>
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow-sm border border-slate-200 mb-8">
+                        <h3 className="px-4 py-3 border-b font-bold text-gray-700 bg-slate-50">Lista de Gastos (Marca al pagar)</h3>
+                        {paid.map((a, i) => (
+                            <div key={a.id} className="flex justify-between items-center p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => onToggleComplete(a.id)}>
+                                <div className="flex items-center flex-1">
+                                    <div className={`mr-3 rounded-full transition-colors ${a.completed ? 'text-emerald-500' : 'text-slate-300'}`}>
+                                        {a.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+                                    </div>
+                                    <div>
+                                        <p className={`text-sm font-medium ${a.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{a.title}</p>
+                                        <p className="text-xs text-gray-500 capitalize">{a.type}</p>
+                                    </div>
+                                </div>
+                                <div className={`font-bold whitespace-nowrap ml-4 ${a.completed ? 'text-emerald-600' : 'text-gray-700'}`}>
+                                    {curr === 'EUR' ? `€${a.priceEUR}` : `${a.priceNOK} kr`}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const Guide = () => {
+            const [playing, setPlaying] = useState(null);
+            const [weather, setWeather] = useState(null);
+
+            // Fetch Weather for Flåm
+            useEffect(() => {
+                const fetchWeather = async () => {
+                    try {
+                        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=60.86&longitude=7.11&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FBerlin');
+                        const data = await res.json();
+                        setWeather(data);
+                    } catch (e) { console.error("Weather error", e); }
+                };
+                fetchWeather();
+            }, []);
+
+            const playAudio = (word) => {
+                setPlaying(word);
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(word);
+                    utterance.lang = 'no-NO'; // Norwegian
+                    utterance.rate = 0.8; // A bit slower for learning
+                    window.speechSynthesis.speak(utterance);
+                    utterance.onend = () => setPlaying(null);
+                } else {
+                    setTimeout(() => setPlaying(null), 1000);
+                }
+            };
+
+            const getWeatherIcon = (code, size=24) => {
+                if(code <= 3) return <CloudSun size={size} className="text-orange-400" />;
+                if(code >= 45 && code <= 48) return <Wind size={size} className="text-slate-400" />;
+                if(code >= 71) return <CloudSnow size={size} className="text-blue-300" />;
+                if(code >= 51) return <CloudRain size={size} className="text-blue-500" />;
+                return <Droplets size={size} className="text-blue-400" />;
+            };
+
+            const getDayName = (dateStr) => {
+                if(!dateStr) return '';
+                const d = new Date(dateStr);
+                return d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
+            };
+
+            return (
+                <div className="pb-24 px-4 pt-6 max-w-lg mx-auto h-full overflow-y-auto">
+                    <h2 className="text-2xl font-bold text-fjord-500 mb-6">Guía y Consejos</h2>
+                    
+                    {/* Weather Card */}
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-5 rounded-xl shadow-lg mb-6 relative overflow-hidden">
+                        <div className="relative z-10 flex justify-between items-center">
+                            <div>
+                                <h3 className="text-blue-100 text-sm font-bold uppercase mb-1">Clima en Flåm (Hoy)</h3>
+                                {weather ? (
+                                    <>
+                                        <div className="text-4xl font-bold">{Math.round(weather.current_weather.temperature)}°C</div>
+                                        <div className="text-sm text-blue-100 mt-1">
+                                            Min: {weather.daily.temperature_2m_min[0]}° | Max: {weather.daily.temperature_2m_max[0]}°
+                                        </div>
+                                    </>
+                                ) : <div className="animate-pulse h-10 w-24 bg-blue-400 rounded mt-2"></div>}
+                            </div>
+                            <div>
+                                {weather ? getWeatherIcon(weather.current_weather.weathercode, 48) : <CloudSun size={48} className="opacity-50" />}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 5-Day Forecast */}
+                    {weather && weather.daily && (
+                        <div className="bg-white rounded-xl shadow border border-slate-100 p-4 mb-8">
+                             <h3 className="font-bold text-gray-700 mb-3 text-sm uppercase flex items-center"><CalendarClock size={16} className="mr-2"/> Pronóstico 5 Días</h3>
+                             <div className="space-y-3">
+                                {weather.daily.time.slice(1, 6).map((day, i) => (
+                                    <div key={day} className="flex justify-between items-center text-sm border-b border-gray-50 last:border-0 pb-2 last:pb-0">
+                                        <span className="font-bold text-gray-600 capitalize w-20">{getDayName(day)}</span>
+                                        <div className="flex items-center space-x-3">
+                                            {getWeatherIcon(weather.daily.weathercode[i+1])}
+                                            <span className="font-medium">
+                                                <span className="text-blue-500">{Math.round(weather.daily.temperature_2m_min[i+1])}°</span>
+                                                <span className="text-gray-300 mx-1">/</span>
+                                                <span className="text-red-500">{Math.round(weather.daily.temperature_2m_max[i+1])}°</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                             </div>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 gap-4 mb-8">
+                        <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
+                            <div className="flex items-center mb-2 text-orange-700 font-bold"><AlertCircle size={18} className="mr-2"/> Reserva Online</div>
+                            <p className="text-sm text-orange-800">Reserva tickets ya. No esperes a las 07:00 AM.</p>
+                        </div>
+                        <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                            <div className="flex items-center mb-2 text-purple-700 font-bold"><ShoppingBag size={18} className="mr-2"/> Compras</div>
+                            <p className="text-sm text-purple-800">Tiendas junto al muelle. Ideal para últimos 30min.</p>
+                        </div>
+                    </div>
+                    
+                    <h3 className="text-lg font-bold text-gray-800 mb-4">Pronunciación (Pulsa para oír)</h3>
+                    <div className="bg-white rounded-lg shadow border border-gray-200">
+                        {PRONUNCIATIONS.map((item, i) => (
+                            <div key={item.word} className={`p-4 flex justify-between items-center ${i!==PRONUNCIATIONS.length-1?'border-b':''}`}>
+                                <div>
+                                    <div className="flex items-baseline space-x-2">
+                                        <span className="font-bold text-lg text-fjord-600">{item.word}</span>
+                                        <span className="text-xs text-gray-400 font-mono">{item.phonetic}</span>
+                                    </div>
+                                    <div className="text-sm font-medium text-gray-700">"{item.simplified}"</div>
+                                </div>
+                                <button onClick={() => playAudio(item.word)} className={`p-3 rounded-full transition-all active:scale-95 ${playing===item.word?'bg-emerald-100 text-emerald-600 ring-2 ring-emerald-400':'bg-slate-100 text-slate-500'}`}>
+                                    <Volume2 size={20} className={playing===item.word ? 'animate-pulse' : ''} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const MapComponent = ({ activities, userLocation, focusedLocation }) => {
+            const mapRef = useRef(null);
+            const mapInstance = useRef(null);
+            const layersRef = useRef([]);
+
+            useEffect(() => {
+                if(!mapRef.current || mapInstance.current) return;
+                const map = L.map(mapRef.current).setView([60.8638, 7.1187], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+                mapInstance.current = map;
+                
+                // Fix Leaflet icons
+                delete L.Icon.Default.prototype._getIconUrl;
+                L.Icon.Default.mergeOptions({
+                    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+                    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                });
+
+                return () => { map.remove(); mapInstance.current = null; };
+            }, []);
+
+            useEffect(() => {
+                const map = mapInstance.current;
+                if(!map) return;
+                
+                // Clear
+                layersRef.current.forEach(l => l.remove());
+                layersRef.current = [];
+
+                // Activities
+                const endIcon = L.divIcon({ className: 'end-marker', html: '<div style="background:#3A7D44;width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 0 5px rgba(0,0,0,0.5);"></div>', iconSize: [12,12] });
+
+                activities.forEach(act => {
+                    const m = L.marker([act.coords.lat, act.coords.lng]).addTo(map).bindPopup(act.title);
+                    layersRef.current.push(m);
+
+                    if(act.endCoords) {
+                        const em = L.marker([act.endCoords.lat, act.endCoords.lng], {icon: endIcon}).addTo(map).bindPopup('Fin: ' + act.title);
+                        layersRef.current.push(em);
+                        const poly = L.polyline([[act.coords.lat, act.coords.lng], [act.endCoords.lat, act.endCoords.lng]], {color: '#2A5B87', weight: 3, dashArray: '5,10'}).addTo(map);
+                        layersRef.current.push(poly);
+                    }
+                });
+
+                if(userLocation) {
+                    const uIcon = L.divIcon({ className: 'user', html: '<div style="background:#3b82f6;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 10px rgba(0,0,0,0.3);"></div>', iconSize: [16,16] });
+                    const um = L.marker([userLocation.lat, userLocation.lng], {icon: uIcon}).addTo(map);
+                    layersRef.current.push(um);
+                }
+            }, [activities, userLocation]);
+
+            useEffect(() => {
+                if(focusedLocation && mapInstance.current) {
+                    // ZOOM LEVEL INCREASED TO 18 (MAX for OSM)
+                    mapInstance.current.flyTo([focusedLocation.lat, focusedLocation.lng], 18);
+                }
+            }, [focusedLocation]);
+
+            return <div ref={mapRef} style={{width:'100%', height:'100%'}} />;
+        };
+
+        const App = () => {
+            const [itinerary, setItinerary] = useState(INITIAL_ITINERARY);
+            const [activeTab, setActiveTab] = useState('timeline');
+            const [userLocation, setUserLocation] = useState(null);
+            const [mapFocus, setMapFocus] = useState(null);
+            const [countdown, setCountdown] = useState('');
+
+            // Load saved state
+            useEffect(() => {
+                const s = localStorage.getItem('flam_v1');
+                if(s) {
+                    const p = JSON.parse(s);
+                    setItinerary(INITIAL_ITINERARY.map(i => {
+                        const saved = p.find(x => x.id === i.id);
+                        return saved ? {...i, completed: saved.completed} : i;
+                    }));
+                }
+            }, []);
+
+            const toggle = (id) => {
+                const n = itinerary.map(a => a.id === id ? {...a, completed: !a.completed} : a);
+                setItinerary(n);
+                localStorage.setItem('flam_v1', JSON.stringify(n));
+            };
+
+            const locate = (c, ec) => { setMapFocus(c); setActiveTab('map'); };
+
+            // Clock
+            useEffect(() => {
+                const t = setInterval(() => {
+                    const now = new Date();
+                    const [h,m] = SHIP_DEPARTURE_TIME.split(':').map(Number);
+                    const d = new Date(); d.setHours(h,m,0);
+                    const diff = d - now;
+                    if(diff <= 0) setCountdown("ZARPANDO");
+                    else {
+                        const hr = Math.floor(diff/3600000);
+                        const mn = Math.floor((diff%3600000)/60000);
+                        const sc = Math.floor((diff%60000)/1000);
+                        setCountdown(`${hr}h ${mn}m ${sc}s`);
+                    }
+                }, 1000);
+                return () => clearInterval(t);
+            }, []);
+
+            // GPS
+            useEffect(() => {
+                if('geolocation' in navigator) {
+                    navigator.geolocation.watchPosition(p => setUserLocation({lat:p.coords.latitude, lng:p.coords.longitude}), null, {enableHighAccuracy:true});
+                }
+            }, []);
+
+            return (
+                <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
+                    <header className="bg-fjord-900 text-white p-3 shadow-md z-20 flex justify-between items-center">
+                        <div className="flex items-center">
+                            <Anchor className="mr-2 text-sunset-500" size={20} />
+                            <div><h1 className="font-bold text-sm leading-none">Salida: {SHIP_DEPARTURE_TIME}</h1><p className="text-xs text-fjord-200">Todos a bordo 17:00</p></div>
+                        </div>
+                        <div className="text-xl font-mono font-bold text-sunset-500 tabular-nums">{countdown}</div>
+                    </header>
+
+                    <main className="flex-1 overflow-hidden relative">
+                        {activeTab === 'timeline' && <div className="h-full overflow-y-auto"><Timeline itinerary={itinerary} onToggleComplete={toggle} onLocate={locate} userLocation={userLocation} /></div>}
+                        {activeTab === 'map' && <div className="h-full w-full"><MapComponent activities={itinerary} userLocation={userLocation} focusedLocation={mapFocus} /></div>}
+                        {activeTab === 'budget' && <Budget itinerary={itinerary} onToggleComplete={toggle} />}
+                        {activeTab === 'guide' && <Guide />}
+                    </main>
+
+                    <nav className="bg-white border-t border-slate-200 shadow-lg z-30 pb-2">
+                        <div className="flex justify-around items-center h-16">
+                            {[
+                                {id:'timeline', icon:CalendarClock, l:'Itinerario'},
+                                {id:'map', icon:MapIcon, l:'Mapa'},
+                                {id:'budget', icon:Wallet, l:'Gastos'},
+                                {id:'guide', icon:BookOpen, l:'Guía'}
+                            ].map(x => (
+                                <button key={x.id} onClick={() => setActiveTab(x.id)} className={`flex flex-col items-center w-full justify-center ${activeTab===x.id?'text-fjord-600':'text-slate-400'}`}>
+                                    <x.icon size={24} />
+                                    <span className="text-[10px] mt-1 font-medium">{x.l}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </nav>
+                </div>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+    
+    <!-- Register Service Worker for Offline Mode -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./service-worker.js')
+            .then(reg => console.log('Service Worker registrado'))
+            .catch(err => console.log('Error SW:', err));
+        });
+      }
+    </script>
+</body>
+</html>
