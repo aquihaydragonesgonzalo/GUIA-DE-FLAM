@@ -78,7 +78,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow, Umbrella, X, Eye, Lightbulb, ChevronRight, Ticket } from 'lucide-react';
+        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow, Umbrella, X, Eye, Lightbulb, ChevronRight, Ticket, ChevronDown } from 'lucide-react';
 
         // --- CONSTANTS & DATA ---
         const SHIP_DEPARTURE_TIME = "17:30";
@@ -303,80 +303,109 @@
             );
         };
 
-        // --- COMPONENTS ---
-
+        // --- TIMELINE COMPONENT (UPDATED WITH BUFFER) ---
         const Timeline = ({ itinerary, onToggleComplete, onLocate, userLocation }) => {
             const [selectedActivity, setSelectedActivity] = useState(null);
 
             return (
                 <div className="pb-24 px-4 pt-4 max-w-lg mx-auto">
                     <h2 className="text-2xl font-bold text-fjord-500 mb-6">Itinerario Lujo Matutino</h2>
-                    <div className="relative border-l-2 border-fjord-200 ml-3 space-y-8">
-                        {itinerary.map((act) => {
+                    <div className="relative border-l-2 border-fjord-200 ml-3">
+                        {itinerary.map((act, index) => {
                             const duration = calculateDuration(act.startTime, act.endTime);
                             const isCritical = act.notes === 'CRITICAL';
                             const dist = userLocation ? calculateDistance(userLocation, act.coords) : null;
                             
-                            return (
-                                <div key={act.id} className="mb-8 ml-6 relative">
-                                    <div className={`absolute -left-[31px] top-0 rounded-full bg-white border-2 cursor-pointer ${act.completed ? 'border-emerald-500 text-emerald-500' : 'border-fjord-500 text-fjord-500'}`}
-                                         onClick={(e) => { e.stopPropagation(); onToggleComplete(act.id); }}>
-                                        {act.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
-                                    </div>
-                                    
-                                    {/* Card Container - Click to Open Modal */}
-                                    <div 
-                                        className={`p-4 rounded-lg border shadow-sm transition-all cursor-pointer active:scale-[0.98] ${act.completed ? 'bg-emerald-50 border-emerald-500' : (isCritical ? 'bg-red-50 border-red-500' : 'bg-white border-fjord-100 hover:shadow-md')}`}
-                                        onClick={() => setSelectedActivity(act)}
-                                    >
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div>
-                                                <div className="flex items-center space-x-2 mb-1">
-                                                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-fjord-100 text-fjord-700">{act.startTime} - {act.endTime}</span>
-                                                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border">{duration}</span>
-                                                </div>
-                                                <h3 className="font-bold text-lg text-gray-800 leading-tight flex items-center">
-                                                    {act.title}
-                                                    <Info size={14} className="ml-2 text-fjord-400" />
-                                                </h3>
-                                            </div>
-                                            {isCritical && <AlertTriangle className="text-red-500 animate-pulse" size={20} />}
+                            // Buffer Calculation
+                            let bufferElement = null;
+                            if (index > 0) {
+                                const prev = itinerary[index - 1];
+                                const [ph, pm] = prev.endTime.split(':').map(Number);
+                                const [ch, cm] = act.startTime.split(':').map(Number);
+                                const diff = (ch * 60 + cm) - (ph * 60 + pm);
+                                
+                                if (diff > 0) {
+                                     const h = Math.floor(diff/60);
+                                     const m = diff%60;
+                                     const label = h > 0 ? `${h}h ${m}m` : `${m} min`;
+                                     bufferElement = (
+                                        <div className="ml-6 mb-6 flex items-center">
+                                            <div className="absolute -left-[6px] w-3 h-3 bg-slate-300 rounded-full border-2 border-white"></div>
+                                            <span className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-full border border-slate-200 flex items-center shadow-sm">
+                                                <ChevronDown size={14} className="mr-1 text-slate-400" />
+                                                {label} traslado/libre
+                                            </span>
                                         </div>
-                                        <div className="mb-3 text-sm text-gray-600 flex items-center flex-wrap gap-1">
-                                            <span className="font-medium flex items-center"><MapPin size={14} className="mr-0.5 text-fjord-500"/> {act.locationName}</span>
-                                            {dist !== null && (
-                                                <span className="ml-2 text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold border border-emerald-200">
-                                                    A {formatDistance(dist)}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{act.description}</p>
-                                        
-                                        {/* Action Buttons (Don't trigger modal) */}
-                                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100" onClick={e => e.stopPropagation()}>
-                                            <div className="flex items-center space-x-2 overflow-x-auto hide-scrollbar">
-                                                <button onClick={() => onLocate(act.coords, act.endCoords)} className="flex items-center text-xs font-medium text-fjord-600 bg-fjord-50 px-2 py-1 rounded hover:bg-fjord-100 whitespace-nowrap">
-                                                    <MapPin size={14} className="mr-1" /> {act.endCoords ? 'Ruta' : 'Mapa'}
-                                                </button>
-                                                
-                                                {act.ticketUrl && (
-                                                    <a href={act.ticketUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 hover:bg-emerald-100 whitespace-nowrap">
-                                                        <Ticket size={14} className="mr-1" /> Tickets
-                                                    </a>
-                                                )}
+                                     );
+                                } else {
+                                    // Spacing if no gap (immediate)
+                                    bufferElement = <div className="h-6"></div>;
+                                }
+                            }
 
-                                                {act.webcamUrl && (
-                                                    <a href={act.webcamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 hover:bg-red-100 whitespace-nowrap">
-                                                        <Camera size={14} className="mr-1" /> Webcam
-                                                    </a>
+                            return (
+                                <React.Fragment key={act.id}>
+                                    {bufferElement}
+                                    <div className="mb-6 ml-6 relative">
+                                        <div className={`absolute -left-[31px] top-0 rounded-full bg-white border-2 cursor-pointer z-10 ${act.completed ? 'border-emerald-500 text-emerald-500' : 'border-fjord-500 text-fjord-500'}`}
+                                             onClick={(e) => { e.stopPropagation(); onToggleComplete(act.id); }}>
+                                            {act.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+                                        </div>
+                                        
+                                        {/* Card Container */}
+                                        <div 
+                                            className={`p-4 rounded-lg border shadow-sm transition-all cursor-pointer active:scale-[0.98] ${act.completed ? 'bg-emerald-50 border-emerald-500' : (isCritical ? 'bg-red-50 border-red-500' : 'bg-white border-fjord-100 hover:shadow-md')}`}
+                                            onClick={() => setSelectedActivity(act)}
+                                        >
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <div className="flex items-center space-x-2 mb-1">
+                                                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-fjord-100 text-fjord-700">{act.startTime} - {act.endTime}</span>
+                                                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border">{duration}</span>
+                                                    </div>
+                                                    <h3 className="font-bold text-lg text-gray-800 leading-tight flex items-center">
+                                                        {act.title}
+                                                        <Info size={14} className="ml-2 text-fjord-400" />
+                                                    </h3>
+                                                </div>
+                                                {isCritical && <AlertTriangle className="text-red-500 animate-pulse" size={20} />}
+                                            </div>
+                                            <div className="mb-3 text-sm text-gray-600 flex items-center flex-wrap gap-1">
+                                                <span className="font-medium flex items-center"><MapPin size={14} className="mr-0.5 text-fjord-500"/> {act.locationName}</span>
+                                                {dist !== null && (
+                                                    <span className="ml-2 text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold border border-emerald-200">
+                                                        A {formatDistance(dist)}
+                                                    </span>
                                                 )}
                                             </div>
-                                            <button onClick={() => onToggleComplete(act.id)} className={`ml-2 px-3 py-1.5 rounded text-xs font-bold uppercase whitespace-nowrap ${act.completed ? 'bg-emerald-100 text-emerald-700' : 'bg-fjord-500 text-white'}`}>
-                                                {act.completed ? 'Listo' : 'Check-in'}
-                                            </button>
+                                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{act.description}</p>
+                                            
+                                            {/* Action Buttons */}
+                                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100" onClick={e => e.stopPropagation()}>
+                                                <div className="flex items-center space-x-2 overflow-x-auto hide-scrollbar">
+                                                    <button onClick={() => onLocate(act.coords, act.endCoords)} className="flex items-center text-xs font-medium text-fjord-600 bg-fjord-50 px-2 py-1 rounded hover:bg-fjord-100 whitespace-nowrap">
+                                                        <MapPin size={14} className="mr-1" /> {act.endCoords ? 'Ruta' : 'Mapa'}
+                                                    </button>
+                                                    
+                                                    {act.ticketUrl && (
+                                                        <a href={act.ticketUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 hover:bg-emerald-100 whitespace-nowrap">
+                                                            <Ticket size={14} className="mr-1" /> Tickets
+                                                        </a>
+                                                    )}
+
+                                                    {act.webcamUrl && (
+                                                        <a href={act.webcamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 hover:bg-red-100 whitespace-nowrap">
+                                                            <Camera size={14} className="mr-1" /> Webcam
+                                                        </a>
+                                                    )}
+                                                </div>
+                                                <button onClick={() => onToggleComplete(act.id)} className={`ml-2 px-3 py-1.5 rounded text-xs font-bold uppercase whitespace-nowrap ${act.completed ? 'bg-emerald-100 text-emerald-700' : 'bg-fjord-500 text-white'}`}>
+                                                    {act.completed ? 'Listo' : 'Check-in'}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </React.Fragment>
                             );
                         })}
                     </div>
