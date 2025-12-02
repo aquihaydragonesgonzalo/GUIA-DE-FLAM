@@ -38,17 +38,17 @@
     <!-- Babel para compilar React en el navegador -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Import Map LIMPIO (Solo versiones compatibles) -->
+    <!-- Import Map LIMPIO -->
     <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@18.2.0",
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
     "lucide-react": "https://esm.sh/lucide-react@0.263.1",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "leaflet": "https://aistudiocdn.com/leaflet@^1.9.4",
     "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
-    "leaflet": "https://aistudiocdn.com/leaflet@^1.9.4"
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
   }
 }
 </script>
@@ -63,6 +63,12 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Modal Animation */
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal-content { animation: fadeIn 0.2s ease-out forwards; }
     </style>
 </head>
 <body>
@@ -72,7 +78,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow } from 'lucide-react';
+        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow, Umbrella, X, Eye, Lightbulb, ChevronRight, Ticket } from 'lucide-react';
 
         // --- CONSTANTS & DATA ---
         const SHIP_DEPARTURE_TIME = "17:30";
@@ -91,7 +97,9 @@
                 id: '1', title: 'Desembarque y Orientación', startTime: '07:00', endTime: '07:20',
                 locationName: 'Muelle de Cruceros', coords: COORDS.FLAM_DOCK,
                 description: 'Flåm estará casi vacío. El aire de la mañana es fresco.',
-                keyDetails: 'Aprovecha para sacar fotos del barco y el fiordo.',
+                fullDescription: 'Flåm estará casi vacío. El aire de la mañana en mayo es fresco y el agua del fiordo suele estar como un espejo.',
+                tips: 'Aprovecha para sacar fotos del barco y el fiordo en la luz de la mañana. Es el mejor momento para fotos sin multitudes.',
+                keyDetails: 'Webcam en vivo disponible.',
                 priceNOK: 0, priceEUR: 0, type: 'logistics', completed: false, notes: 'Webcam disponible',
                 webcamUrl: 'https://www.norwaysbest.com/es/flam/webcam-de-flam'
             },
@@ -100,44 +108,60 @@
                 locationName: 'Estación de Flåm', endLocationName: 'Estación Myrdal',
                 coords: COORDS.FLAM_STATION, endCoords: COORDS.MYRDAL,
                 description: 'Considerado uno de los viajes en tren más bonitos del mundo.',
-                keyDetails: '¡Toma el primer tren! Asientos: Izquierda subida, derecha bajada.',
-                priceNOK: 750, priceEUR: 65, type: 'transport', completed: false, notes: 'Parada en cascada Kjosfossen'
+                fullDescription: 'Considerado uno de los viajes en tren más bonitos del mundo. Subirás desde el nivel del mar hasta 867 metros. Verás la cascada Kjosfossen (donde el tren para fotos) y valles profundos.',
+                tips: '¡Toma el primer tren! Estarás en Myrdal antes de que lleguen otros cruceros.\n\n⭐ ASIENTOS: LADO IZQUIERDO SUBIDA – LADO DERECHO BAJADA.',
+                keyDetails: 'Ida y vuelta (2 horas).',
+                priceNOK: 750, priceEUR: 65, type: 'transport', completed: false, notes: 'Parada en cascada Kjosfossen',
+                ticketUrl: 'https://www.norwaysbest.com/es/actividades/el-tren-de-flam'
             },
             {
                 id: '3', title: 'Almuerzo en Ægir BrewPub', startTime: '10:00', endTime: '11:30',
                 locationName: 'Ægir BrewPub', coords: COORDS.AEGIR_PUB,
-                description: 'Edificio vikingo. Chimenea central de 9 metros.',
-                keyDetails: '¡Tiempo para el festín! El pub abre antes en días de crucero.',
-                priceNOK: 500, priceEUR: 43, type: 'food', completed: false
+                description: 'Edificio vikingo con chimenea de 9 metros.',
+                fullDescription: 'Un edificio inspirado en la mitología nórdica, con arquitectura de madera flotante, cabezas de dragón y una impresionante chimenea central de 9 metros de altura.',
+                tips: '¡Tiempo para el festín! El pub abre antes en días de crucero. Disfruta de la chimenea y el menú completo. Es una experiencia vikinga auténtica.',
+                keyDetails: 'Plato fuerte y bebida incluidos en presupuesto.',
+                priceNOK: 500, priceEUR: 43, type: 'food', completed: false,
+                ticketUrl: 'https://www.google.com/search?q=https://www.flamsbrygga.no/en/aegir-brewpub/&authuser=1'
             },
             {
                 id: '4', title: 'Fjord Cruise + Bus', startTime: '12:00', endTime: '14:30',
                 locationName: 'Puerto Flåm', endLocationName: 'Gudvangen',
                 coords: COORDS.FLAM_DOCK, endCoords: COORDS.GUDVANGEN,
                 description: 'Navegarás por el Nærøyfjord (UNESCO).',
-                keyDetails: 'Salida barco eléctrico 12:00. Regreso en shuttle bus.',
-                priceNOK: 1100, priceEUR: 95, type: 'sightseeing', completed: false
+                fullDescription: 'Navegarás por el Nærøyfjord (Patrimonio UNESCO). Es la parte más estrecha y espectacular del fiordo, con cascadas y granjas aisladas en las laderas.',
+                tips: 'Logística: Toma la salida del barco eléctrico a las 12:00. Navegas Flåm → Gudvangen, y tomas el bus de vuelta (shuttle incluido en el ticket) a Flåm.',
+                keyDetails: 'Duración total 2.5 horas.',
+                priceNOK: 1100, priceEUR: 95, type: 'sightseeing', completed: false,
+                ticketUrl: 'https://www.norwaysbest.com/es/flam/actividades/crucero-por-el-fiordo-naeroyfjord'
             },
             {
                 id: '5', title: 'Mirador Stegastein', startTime: '15:00', endTime: '16:30',
                 locationName: 'Parada Bus Flåm', endLocationName: 'Mirador Stegastein',
                 coords: COORDS.FLAM_STATION, endCoords: COORDS.STEGASTEIN_VIEWPOINT,
                 description: 'Plataforma a 650m sobre el fiordo.',
-                keyDetails: 'Toma el bus a las 15:00. Vistas espectaculares.',
-                priceNOK: 410, priceEUR: 36, type: 'sightseeing', completed: false
+                fullDescription: 'Una plataforma de acero y madera que sobresale 30 metros de la montaña y cuelga a 650 metros sobre el fiordo con un panel frontal de cristal único.',
+                tips: 'Toma el bus a las 15:00. Volverás con las espectaculares luces del atardecer primaveral sobre el fiordo.',
+                keyDetails: 'Tour en bus ida y vuelta.',
+                priceNOK: 410, priceEUR: 36, type: 'sightseeing', completed: false,
+                ticketUrl: 'https://www.norwaysbest.com/es/flam/actividades/mirador-stegastein'
             },
             {
                 id: '6', title: 'Compras y Relax', startTime: '16:30', endTime: '17:00',
                 locationName: 'Centro de Visitantes', coords: COORDS.VISITOR_CENTER,
                 description: 'Tiendas de souvenirs y artesanías.',
-                keyDetails: 'Último café. Estás a pasos del muelle.',
+                fullDescription: 'Tiendas de souvenirs con suéteres de lana noruega auténtica y artesanías locales.',
+                tips: 'Último café o souvenir. Estás a pasos del muelle, así que es un lugar seguro para esperar.',
+                keyDetails: 'Relajado, sin prisa.',
                 priceNOK: 0, priceEUR: 0, type: 'shopping', completed: false
             },
             {
                 id: '7', title: 'Regreso al Barco', startTime: '17:00', endTime: '17:30',
                 locationName: 'Muelle', coords: COORDS.FLAM_DOCK,
                 description: 'Hora límite de embarque 17:30.',
-                keyDetails: 'Debes estar en el muelle a las 17:00.',
+                fullDescription: 'Regreso obligatorio al barco. La pasarela se retira puntualmente.',
+                tips: '¡ADVERTENCIA! Hora límite de embarque: 17:30. Debes estar en el muelle a las 17:00 para evitar cualquier riesgo.',
+                keyDetails: 'CRÍTICO: NO LLEGAR TARDE.',
                 priceNOK: 0, priceEUR: 0, type: 'logistics', completed: false, notes: 'CRITICAL'
             }
         ];
@@ -191,9 +215,99 @@
             return h > 0 && m > 0 ? `${h}h ${m}m` : (h > 0 ? `${h}h` : `${m} min`);
         };
 
+        // --- MODAL COMPONENT ---
+        const ActivityDetailModal = ({ activity, onClose }) => {
+            if (!activity) return null;
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+                    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden modal-content relative flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+                        
+                        {/* Header */}
+                        <div className="bg-fjord-600 p-4 text-white relative">
+                            <button onClick={onClose} className="absolute top-4 right-4 p-1 bg-white/20 rounded-full hover:bg-white/30">
+                                <X size={20} />
+                            </button>
+                            <h2 className="text-xl font-bold pr-8 leading-tight">{activity.title}</h2>
+                            <div className="flex items-center space-x-2 mt-2 text-fjord-100 text-sm font-medium">
+                                <Clock size={16} />
+                                <span>{activity.startTime} - {activity.endTime}</span>
+                            </div>
+                        </div>
+
+                        {/* Content Scrollable */}
+                        <div className="p-6 overflow-y-auto">
+                            
+                            {/* Section: Qué veremos */}
+                            <div className="mb-6">
+                                <h3 className="flex items-center text-fjord-600 font-bold mb-2 uppercase text-sm tracking-wider">
+                                    <Eye size={18} className="mr-2" /> Qué veremos
+                                </h3>
+                                <p className="text-gray-700 leading-relaxed text-[15px]">
+                                    {activity.fullDescription || activity.description}
+                                </p>
+                            </div>
+
+                            {/* Section: Tips/Detalle */}
+                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+                                <h3 className="flex items-center text-amber-700 font-bold mb-2 uppercase text-sm tracking-wider">
+                                    <Lightbulb size={18} className="mr-2" /> Claves y Consejos
+                                </h3>
+                                <p className="text-gray-800 text-sm whitespace-pre-line leading-relaxed">
+                                    {activity.tips || activity.keyDetails}
+                                </p>
+                            </div>
+
+                            {/* Locations */}
+                            <div className="flex flex-col space-y-2 text-sm text-gray-500 mb-4">
+                                <div className="flex items-center">
+                                    <MapPin size={16} className="text-fjord-500 mr-2" />
+                                    <span className="font-semibold text-gray-700">Inicio:</span>
+                                    <span className="ml-1">{activity.locationName}</span>
+                                </div>
+                                {activity.endLocationName && (
+                                    <div className="flex items-center">
+                                        <MapPin size={16} className="text-mountain-500 mr-2" />
+                                        <span className="font-semibold text-gray-700">Fin:</span>
+                                        <span className="ml-1">{activity.endLocationName}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Buttons: Ticket & Webcam */}
+                            <div className="space-y-3 mt-4">
+                                {activity.ticketUrl && (
+                                    <a href={activity.ticketUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-md hover:bg-emerald-700 active:scale-95 transition-all">
+                                        <Ticket size={20} className="mr-2" />
+                                        Comprar Tickets Online
+                                    </a>
+                                )}
+
+                                {activity.webcamUrl && (
+                                    <a href={activity.webcamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold border border-red-100 hover:bg-red-100">
+                                        <Camera size={18} className="mr-2" />
+                                        Ver Webcam en Vivo
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Footer Button */}
+                        <div className="p-4 border-t border-gray-100 bg-gray-50">
+                            <button onClick={onClose} className="w-full py-3 bg-fjord-600 text-white rounded-xl font-bold shadow-md active:scale-95 transition-transform">
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         // --- COMPONENTS ---
 
         const Timeline = ({ itinerary, onToggleComplete, onLocate, userLocation }) => {
+            const [selectedActivity, setSelectedActivity] = useState(null);
+
             return (
                 <div className="pb-24 px-4 pt-4 max-w-lg mx-auto">
                     <h2 className="text-2xl font-bold text-fjord-500 mb-6">Itinerario Lujo Matutino</h2>
@@ -206,17 +320,25 @@
                             return (
                                 <div key={act.id} className="mb-8 ml-6 relative">
                                     <div className={`absolute -left-[31px] top-0 rounded-full bg-white border-2 cursor-pointer ${act.completed ? 'border-emerald-500 text-emerald-500' : 'border-fjord-500 text-fjord-500'}`}
-                                         onClick={() => onToggleComplete(act.id)}>
+                                         onClick={(e) => { e.stopPropagation(); onToggleComplete(act.id); }}>
                                         {act.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
                                     </div>
-                                    <div className={`p-4 rounded-lg border shadow-sm transition-all ${act.completed ? 'bg-emerald-50 border-emerald-500' : (isCritical ? 'bg-red-50 border-red-500' : 'bg-white border-fjord-100')}`}>
+                                    
+                                    {/* Card Container - Click to Open Modal */}
+                                    <div 
+                                        className={`p-4 rounded-lg border shadow-sm transition-all cursor-pointer active:scale-[0.98] ${act.completed ? 'bg-emerald-50 border-emerald-500' : (isCritical ? 'bg-red-50 border-red-500' : 'bg-white border-fjord-100 hover:shadow-md')}`}
+                                        onClick={() => setSelectedActivity(act)}
+                                    >
                                         <div className="flex justify-between items-start mb-2">
                                             <div>
                                                 <div className="flex items-center space-x-2 mb-1">
                                                     <span className="px-2 py-0.5 rounded text-xs font-bold bg-fjord-100 text-fjord-700">{act.startTime} - {act.endTime}</span>
                                                     <span className="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border">{duration}</span>
                                                 </div>
-                                                <h3 className="font-bold text-lg text-gray-800 leading-tight">{act.title}</h3>
+                                                <h3 className="font-bold text-lg text-gray-800 leading-tight flex items-center">
+                                                    {act.title}
+                                                    <Info size={14} className="ml-2 text-fjord-400" />
+                                                </h3>
                                             </div>
                                             {isCritical && <AlertTriangle className="text-red-500 animate-pulse" size={20} />}
                                         </div>
@@ -228,20 +350,28 @@
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-sm text-gray-600 mb-3">{act.description}</p>
-                                        <div className="bg-slate-50 p-3 rounded text-sm text-slate-700 italic border-l-4 border-sunset-500 mb-4">"{act.keyDetails}"</div>
-                                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                                            <div className="flex items-center space-x-3">
-                                                <button onClick={() => onLocate(act.coords, act.endCoords)} className="flex items-center text-xs font-medium text-fjord-600 bg-fjord-50 px-2 py-1 rounded hover:bg-fjord-100">
+                                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{act.description}</p>
+                                        
+                                        {/* Action Buttons (Don't trigger modal) */}
+                                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100" onClick={e => e.stopPropagation()}>
+                                            <div className="flex items-center space-x-2 overflow-x-auto hide-scrollbar">
+                                                <button onClick={() => onLocate(act.coords, act.endCoords)} className="flex items-center text-xs font-medium text-fjord-600 bg-fjord-50 px-2 py-1 rounded hover:bg-fjord-100 whitespace-nowrap">
                                                     <MapPin size={14} className="mr-1" /> {act.endCoords ? 'Ruta' : 'Mapa'}
                                                 </button>
+                                                
+                                                {act.ticketUrl && (
+                                                    <a href={act.ticketUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 hover:bg-emerald-100 whitespace-nowrap">
+                                                        <Ticket size={14} className="mr-1" /> Tickets
+                                                    </a>
+                                                )}
+
                                                 {act.webcamUrl && (
-                                                    <a href={act.webcamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 hover:bg-red-100">
+                                                    <a href={act.webcamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 hover:bg-red-100 whitespace-nowrap">
                                                         <Camera size={14} className="mr-1" /> Webcam
                                                     </a>
                                                 )}
                                             </div>
-                                            <button onClick={() => onToggleComplete(act.id)} className={`px-3 py-1.5 rounded text-xs font-bold uppercase ${act.completed ? 'bg-emerald-100 text-emerald-700' : 'bg-fjord-500 text-white'}`}>
+                                            <button onClick={() => onToggleComplete(act.id)} className={`ml-2 px-3 py-1.5 rounded text-xs font-bold uppercase whitespace-nowrap ${act.completed ? 'bg-emerald-100 text-emerald-700' : 'bg-fjord-500 text-white'}`}>
                                                 {act.completed ? 'Listo' : 'Check-in'}
                                             </button>
                                         </div>
@@ -250,6 +380,8 @@
                             );
                         })}
                     </div>
+                    {/* Render Modal */}
+                    <ActivityDetailModal activity={selectedActivity} onClose={() => setSelectedActivity(null)} />
                 </div>
             );
         };
@@ -326,14 +458,28 @@
         const Guide = () => {
             const [playing, setPlaying] = useState(null);
             const [weather, setWeather] = useState(null);
+            const [hourly, setHourly] = useState([]);
 
             // Fetch Weather for Flåm
             useEffect(() => {
                 const fetchWeather = async () => {
                     try {
-                        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=60.86&longitude=7.11&current_weather=true&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FBerlin');
+                        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=60.86&longitude=7.11&current_weather=true&hourly=temperature_2m,weathercode,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FBerlin&forecast_days=5');
                         const data = await res.json();
                         setWeather(data);
+                        
+                        // Process hourly (07:00 to 18:00)
+                        const times = data.hourly.time;
+                        const temps = data.hourly.temperature_2m;
+                        const codes = data.hourly.weathercode;
+                        const probs = data.hourly.precipitation_probability;
+                        
+                        const details = times.map((t, i) => {
+                             const date = new Date(t);
+                             return { hour: date.getHours(), temp: temps[i], code: codes[i], prob: probs[i] };
+                        }).filter(h => h.hour >= 7 && h.hour <= 18);
+                        
+                        setHourly(details);
                     } catch (e) { console.error("Weather error", e); }
                 };
                 fetchWeather();
@@ -374,7 +520,7 @@
                     <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-5 rounded-xl shadow-lg mb-6 relative overflow-hidden">
                         <div className="relative z-10 flex justify-between items-center">
                             <div>
-                                <h3 className="text-blue-100 text-sm font-bold uppercase mb-1">Clima en Flåm (Hoy)</h3>
+                                <h3 className="text-blue-100 text-sm font-bold uppercase mb-1">Clima en Flåm (Ahora)</h3>
                                 {weather ? (
                                     <>
                                         <div className="text-4xl font-bold">{Math.round(weather.current_weather.temperature)}°C</div>
@@ -390,20 +536,43 @@
                         </div>
                     </div>
 
+                    {/* Hourly Detail */}
+                    {hourly.length > 0 && (
+                        <div className="mb-8">
+                             <h3 className="font-bold text-gray-700 mb-3 text-sm uppercase flex items-center">
+                                <Clock size={16} className="mr-2"/> Escala Hora a Hora (07-18h)
+                             </h3>
+                             <div className="flex overflow-x-auto pb-4 space-x-3 hide-scrollbar">
+                                 {hourly.map(h => (
+                                     <div key={h.hour} className="flex flex-col items-center bg-white p-3 rounded-lg border border-slate-100 min-w-[70px] shadow-sm">
+                                         <span className="text-xs font-bold text-gray-500 mb-1">{h.hour}:00</span>
+                                         <div className="my-1">{getWeatherIcon(h.code, 24)}</div>
+                                         <span className="font-bold text-fjord-600">{Math.round(h.temp)}°</span>
+                                         {h.prob > 0 && (
+                                             <div className="flex items-center text-[10px] text-blue-500 mt-1 font-medium">
+                                                 <Umbrella size={10} className="mr-0.5" /> {h.prob}%
+                                             </div>
+                                         )}
+                                     </div>
+                                 ))}
+                             </div>
+                        </div>
+                    )}
+
                     {/* 5-Day Forecast */}
                     {weather && weather.daily && (
                         <div className="bg-white rounded-xl shadow border border-slate-100 p-4 mb-8">
                              <h3 className="font-bold text-gray-700 mb-3 text-sm uppercase flex items-center"><CalendarClock size={16} className="mr-2"/> Pronóstico 5 Días</h3>
                              <div className="space-y-3">
-                                {weather.daily.time.slice(1, 6).map((day, i) => (
+                                {weather.daily.time.slice(0, 5).map((day, i) => (
                                     <div key={day} className="flex justify-between items-center text-sm border-b border-gray-50 last:border-0 pb-2 last:pb-0">
                                         <span className="font-bold text-gray-600 capitalize w-20">{getDayName(day)}</span>
                                         <div className="flex items-center space-x-3">
-                                            {getWeatherIcon(weather.daily.weathercode[i+1])}
+                                            {getWeatherIcon(weather.daily.weathercode[i])}
                                             <span className="font-medium">
-                                                <span className="text-blue-500">{Math.round(weather.daily.temperature_2m_min[i+1])}°</span>
+                                                <span className="text-blue-500">{Math.round(weather.daily.temperature_2m_min[i])}°</span>
                                                 <span className="text-gray-300 mx-1">/</span>
-                                                <span className="text-red-500">{Math.round(weather.daily.temperature_2m_max[i+1])}°</span>
+                                                <span className="text-red-500">{Math.round(weather.daily.temperature_2m_max[i])}°</span>
                                             </span>
                                         </div>
                                     </div>

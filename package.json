@@ -11,9 +11,9 @@
   "dependencies": {
     "react": "^19.2.0",
     "lucide-react": "0.263.1",
-    "react-dom": "^19.2.0",
+    "leaflet": "^1.9.4",
     "recharts": "^3.5.1",
-    "leaflet": "^1.9.4"
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
