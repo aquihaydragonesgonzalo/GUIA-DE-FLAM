@@ -82,7 +82,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow, Umbrella, X, Eye, Lightbulb, ChevronRight, Ticket, ChevronDown, Zap, Calculator, ArrowRightLeft, RefreshCw } from 'lucide-react';
+        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow, Umbrella, X, Eye, Lightbulb, ChevronRight, Ticket, ChevronDown, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages } from 'lucide-react';
 
         // --- CONSTANTS & DATA ---
         const SHIP_DEPARTURE_TIME = "18:00";
@@ -772,6 +772,29 @@
                              </div>
                         </div>
                     )}
+
+                    {/* --- VISUAL TRANSLATOR --- */}
+                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white shadow-lg mb-8 relative overflow-hidden">
+                        <div className="relative z-10">
+                            <h3 className="text-indigo-100 text-sm font-bold uppercase mb-2 flex items-center">
+                                <Languages size={18} className="mr-2"/> Traductor Visual
+                            </h3>
+                            <p className="text-sm mb-4 opacity-90 leading-tight">
+                                Apunta con tu cámara a carteles o menús para traducir del noruego al español al instante.
+                            </p>
+                            <a 
+                                href="https://translate.google.com/?sl=no&tl=es&op=images" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center w-full py-3 bg-white text-indigo-700 rounded-lg font-bold shadow hover:bg-indigo-50 transition-colors"
+                            >
+                                <Camera size={20} className="mr-2" />
+                                Activar Cámara Traductora
+                            </a>
+                        </div>
+                        {/* Decorative background circle */}
+                        <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white opacity-10 rounded-full"></div>
+                    </div>
 
                     <div className="grid grid-cols-1 gap-4 mb-8">
                         <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
