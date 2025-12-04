@@ -85,7 +85,10 @@
         import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow, Umbrella, X, Eye, Lightbulb, ChevronRight, Ticket, ChevronDown, Zap } from 'lucide-react';
 
         // --- CONSTANTS & DATA ---
-        const SHIP_DEPARTURE_TIME = "17:30";
+        const SHIP_DEPARTURE_TIME = "18:00";
+        const ONBOARD_TIME = "17:45";
+        const UPDATE_DATE = "04 de diciembre de 2025";
+        
         const COORDS = {
             FLAM_DOCK: { lat: 60.8638, lng: 7.1187 },
             FLAM_STATION: { lat: 60.8632, lng: 7.1145 },
@@ -115,17 +118,17 @@
                 fullDescription: 'Considerado uno de los viajes en tren más bonitos del mundo. Subirás desde el nivel del mar hasta 867 metros. Verás la cascada Kjosfossen (donde el tren para fotos) y valles profundos.',
                 tips: '¡Toma el primer tren! Estarás en Myrdal antes de que lleguen otros cruceros.\n\n⭐ ASIENTOS: LADO IZQUIERDO SUBIDA – LADO DERECHO BAJADA.',
                 keyDetails: 'Ida y vuelta (2 horas).',
-                priceNOK: 750, priceEUR: 65, type: 'transport', completed: false, notes: 'Parada en cascada Kjosfossen',
+                priceNOK: 800, priceEUR: 70, type: 'transport', completed: false, notes: 'Parada en cascada Kjosfossen',
                 ticketUrl: 'https://www.norwaysbest.com/es/actividades/el-tren-de-flam'
             },
             {
-                id: '3', title: 'Almuerzo en Ægir BrewPub', startTime: '10:00', endTime: '11:30',
+                id: '3', title: 'Bebida en Ægir BrewPub', startTime: '10:00', endTime: '11:30',
                 locationName: 'Ægir BrewPub', coords: COORDS.AEGIR_PUB,
                 description: 'Edificio vikingo con chimenea de 9 metros.',
                 fullDescription: 'Un edificio inspirado en la mitología nórdica, con arquitectura de madera flotante, cabezas de dragón y una impresionante chimenea central de 9 metros de altura.',
-                tips: '¡Tiempo para el festín! El pub abre antes en días de crucero. Disfruta de la chimenea y el menú completo. Es una experiencia vikinga auténtica.',
-                keyDetails: 'Plato fuerte y bebida incluidos en presupuesto.',
-                priceNOK: 500, priceEUR: 43, type: 'food', completed: false,
+                tips: '¡Tiempo para el festín! El pub abre antes en días de crucero. Disfruta de la chimenea y el ambiente vikingo.',
+                keyDetails: 'Bebida en el pub vikingo (según presupuesto).',
+                priceNOK: 80, priceEUR: 8.50, type: 'food', completed: false,
                 ticketUrl: 'https://www.google.com/search?q=https://www.flamsbrygga.no/en/aegir-brewpub/&authuser=1'
             },
             {
@@ -136,7 +139,7 @@
                 fullDescription: 'Navegarás por el Nærøyfjord (Patrimonio UNESCO). Es la parte más estrecha y espectacular del fiordo, con cascadas y granjas aisladas en las laderas.',
                 tips: 'Logística: Toma la salida del barco eléctrico a las 12:00. Navegas Flåm → Gudvangen, y tomas el bus de vuelta (shuttle incluido en el ticket) a Flåm.',
                 keyDetails: 'Duración total 2.5 horas.',
-                priceNOK: 1100, priceEUR: 95, type: 'sightseeing', completed: false,
+                priceNOK: 950, priceEUR: 85, type: 'sightseeing', completed: false,
                 ticketUrl: 'https://www.norwaysbest.com/es/flam/actividades/crucero-por-el-fiordo-naeroyfjord'
             },
             {
@@ -147,25 +150,34 @@
                 fullDescription: 'Una plataforma de acero y madera que sobresale 30 metros de la montaña y cuelga a 650 metros sobre el fiordo con un panel frontal de cristal único.',
                 tips: 'Toma el bus a las 15:00. Volverás con las espectaculares luces del atardecer primaveral sobre el fiordo.',
                 keyDetails: 'Tour en bus ida y vuelta.',
-                priceNOK: 410, priceEUR: 36, type: 'sightseeing', completed: false,
+                priceNOK: 450, priceEUR: 40, type: 'sightseeing', completed: false,
                 ticketUrl: 'https://www.norwaysbest.com/es/flam/actividades/mirador-stegastein'
             },
             {
-                id: '6', title: 'Compras y Relax', startTime: '16:30', endTime: '17:00',
+                id: '6', title: 'Compras y Relax', startTime: '16:30', endTime: '17:30',
                 locationName: 'Centro de Visitantes', coords: COORDS.VISITOR_CENTER,
                 description: 'Tiendas de souvenirs y artesanías.',
                 fullDescription: 'Tiendas de souvenirs con suéteres de lana noruega auténtica y artesanías locales.',
-                tips: 'Último café o souvenir. Estás a pasos del muelle, así que es un lugar seguro para esperar.',
+                tips: '¡Nuevo! Una hora completa para el paseo sin prisas gracias a la hora extra. Último café o souvenir.',
                 keyDetails: 'Relajado, sin prisa.',
                 priceNOK: 0, priceEUR: 0, type: 'shopping', completed: false
             },
             {
-                id: '7', title: 'Regreso al Barco', startTime: '17:00', endTime: '17:30',
+                id: '7', title: 'Caminata Final al Barco', startTime: '17:30', endTime: '17:45',
+                locationName: 'Centro -> Muelle', coords: COORDS.FLAM_DOCK,
+                description: 'Traslado tranquilo al muelle.',
+                fullDescription: 'Comienza a moverte tranquilamente hacia el muelle para el embarque.',
+                tips: 'Advertencia: No apures el tiempo. Es el momento de volver.',
+                keyDetails: '15 min de caminata.',
+                priceNOK: 0, priceEUR: 0, type: 'logistics', completed: false
+            },
+            {
+                id: '8', title: 'DEADLINE ¡A BORDO!', startTime: '17:45', endTime: '18:00',
                 locationName: 'Muelle', coords: COORDS.FLAM_DOCK,
-                description: 'Hora límite de embarque 17:30.',
+                description: 'Hora Límite 17:45.',
                 fullDescription: 'Regreso obligatorio al barco. La pasarela se retira puntualmente.',
-                tips: '¡ADVERTENCIA! Hora límite de embarque: 17:30. Debes estar en el muelle a las 17:00 para evitar cualquier riesgo.',
-                keyDetails: 'CRÍTICO: NO LLEGAR TARDE.',
+                tips: '¡ADVERTENCIA! Hora límite de embarque: 17:45. Debes estar en el muelle sin falta.',
+                keyDetails: 'CRÍTICO: SALIDA DEL BARCO A LAS 18:00.',
                 priceNOK: 0, priceEUR: 0, type: 'logistics', completed: false, notes: 'CRITICAL'
             }
         ];
@@ -492,6 +504,9 @@
                     </div>
                     {/* Render Modal */}
                     <ActivityDetailModal activity={selectedActivity} onClose={() => setSelectedActivity(null)} />
+                    <div className="mt-8 text-center text-xs text-slate-400 pb-4">
+                        {UPDATE_DATE}
+                    </div>
                 </div>
             );
         };
@@ -719,6 +734,9 @@
                             </div>
                         ))}
                     </div>
+                    <div className="mt-8 text-center text-xs text-slate-400 pb-4">
+                        Actualizado el {UPDATE_DATE}
+                    </div>
                 </div>
             );
         };
@@ -842,7 +860,7 @@
                     <header className="bg-fjord-900 text-white p-3 shadow-md z-20 flex justify-between items-center">
                         <div className="flex items-center">
                             <Anchor className="mr-2 text-sunset-500" size={20} />
-                            <div><h1 className="font-bold text-sm leading-none">Salida: {SHIP_DEPARTURE_TIME}</h1><p className="text-xs text-fjord-200">Todos a bordo 17:00</p></div>
+                            <div><h1 className="font-bold text-sm leading-none">Salida: {SHIP_DEPARTURE_TIME}</h1><p className="text-xs text-fjord-200">Todos a bordo {ONBOARD_TIME}</p></div>
                         </div>
                         <div className="text-xl font-mono font-bold text-sunset-500 tabular-nums">{countdown}</div>
                     </header>
