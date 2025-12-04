@@ -82,7 +82,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow, Umbrella, X, Eye, Lightbulb, ChevronRight, Ticket, ChevronDown, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages } from 'lucide-react';
+        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow, Umbrella, X, Eye, Lightbulb, ChevronRight, Ticket, ChevronDown, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils } from 'lucide-react';
 
         // --- CONSTANTS & DATA ---
         const SHIP_DEPARTURE_TIME = "18:00";
@@ -101,17 +101,35 @@
 
         const INITIAL_ITINERARY = [
             {
-                id: '1', title: 'Desembarque y Orientación', startTime: '07:00', endTime: '07:20',
+                id: '1', title: 'Llegada a Puerto', startTime: '07:00', endTime: '07:15',
+                locationName: 'Fiordo de Aurlandsfjord', coords: COORDS.FLAM_DOCK,
+                description: 'El MSC Euribia atraca en el puerto de Flåm.',
+                fullDescription: 'Disfruta de las vistas de la llegada navegando por el fiordo antes de atracar. El barco inicia maniobras de atraque.',
+                tips: 'Sube a cubierta para ver la aproximación al fiordo. Es espectacular.',
+                keyDetails: 'Hora de llegada oficial.',
+                priceNOK: 0, priceEUR: 0, type: 'logistics', completed: false
+            },
+            {
+                id: '2', title: 'Desayuno Buffet "Marketplace"', startTime: '07:15', endTime: '07:45',
+                locationName: 'MSC Euribia', coords: COORDS.FLAM_DOCK,
+                description: 'Carga energía antes de bajar.',
+                fullDescription: 'Desayuno completo en el buffet Marketplace del barco antes de iniciar la excursión.',
+                tips: 'Come bien, el almuerzo en el pub es hasta las 10:40. Lleva agua.',
+                keyDetails: 'Buffet abierto.',
+                priceNOK: 0, priceEUR: 0, type: 'food', completed: false
+            },
+            {
+                id: '3', title: 'Desembarque y Orientación', startTime: '08:00', endTime: '08:15',
                 locationName: 'Muelle de Cruceros', coords: COORDS.FLAM_DOCK,
-                description: 'Flåm estará casi vacío. El aire de la mañana es fresco.',
-                fullDescription: 'Flåm estará casi vacío. El aire de la mañana en mayo es fresco y el agua del fiordo suele estar como un espejo.',
+                description: 'Bajada del barco y camino a la estación.',
+                fullDescription: 'Flåm estará fresco. Baja del barco y dirígete directamente a la estación de tren (a 200m).',
                 tips: 'Aprovecha para sacar fotos del barco y el fiordo en la luz de la mañana. Es el mejor momento para fotos sin multitudes.',
                 keyDetails: 'Webcam en vivo disponible.',
                 priceNOK: 0, priceEUR: 0, type: 'logistics', completed: false, notes: 'Webcam disponible',
                 webcamUrl: 'https://www.norwaysbest.com/es/flam/webcam-de-flam'
             },
             {
-                id: '2', title: 'El Tren (Flåmsbana)', startTime: '08:20', endTime: '10:28',
+                id: '4', title: 'El Tren (Flåmsbana)', startTime: '08:20', endTime: '10:28',
                 locationName: 'Estación de Flåm', endLocationName: 'Estación Myrdal',
                 coords: COORDS.FLAM_STATION, endCoords: COORDS.MYRDAL,
                 description: 'Considerado uno de los viajes en tren más bonitos del mundo.',
@@ -122,7 +140,7 @@
                 ticketUrl: 'https://www.norwaysbest.com/es/actividades/el-tren-de-flam'
             },
             {
-                id: '3', title: 'Bebida en Ægir BrewPub', startTime: '10:40', endTime: '11:40',
+                id: '5', title: 'Bebida en Ægir BrewPub', startTime: '10:40', endTime: '11:40',
                 locationName: 'Ægir BrewPub', coords: COORDS.AEGIR_PUB,
                 description: 'Edificio vikingo con chimenea de 9 metros.',
                 fullDescription: 'Un edificio inspirado en la mitología nórdica, con arquitectura de madera flotante, cabezas de dragón y una impresionante chimenea central de 9 metros de altura.',
@@ -132,7 +150,7 @@
                 ticketUrl: 'https://www.google.com/search?q=https://www.flamsbrygga.no/en/aegir-brewpub/&authuser=1'
             },
             {
-                id: '4', title: 'Fjord Cruise + Bus', startTime: '12:00', endTime: '14:30',
+                id: '6', title: 'Fjord Cruise + Bus', startTime: '12:00', endTime: '14:30',
                 locationName: 'Puerto Flåm', endLocationName: 'Gudvangen',
                 coords: COORDS.FLAM_DOCK, endCoords: COORDS.GUDVANGEN,
                 description: 'Navegarás por el Nærøyfjord (UNESCO).',
@@ -143,7 +161,7 @@
                 ticketUrl: 'https://www.norwaysbest.com/es/flam/actividades/crucero-por-el-fiordo-naeroyfjord'
             },
             {
-                id: '5', title: 'Mirador Stegastein', startTime: '15:00', endTime: '16:30',
+                id: '7', title: 'Mirador Stegastein', startTime: '15:00', endTime: '16:30',
                 locationName: 'Parada Bus Flåm', endLocationName: 'Mirador Stegastein',
                 coords: COORDS.FLAM_STATION, endCoords: COORDS.STEGASTEIN_VIEWPOINT,
                 description: 'Plataforma a 650m sobre el fiordo.',
@@ -154,7 +172,7 @@
                 ticketUrl: 'https://www.norwaysbest.com/es/flam/actividades/mirador-stegastein'
             },
             {
-                id: '6', title: 'Compras y Relax', startTime: '16:30', endTime: '17:30',
+                id: '8', title: 'Compras y Relax', startTime: '16:30', endTime: '17:30',
                 locationName: 'Centro de Visitantes', coords: COORDS.VISITOR_CENTER,
                 description: 'Tiendas de souvenirs y artesanías.',
                 fullDescription: 'Tiendas de souvenirs con suéteres de lana noruega auténtica y artesanías locales.',
@@ -163,7 +181,7 @@
                 priceNOK: 0, priceEUR: 0, type: 'shopping', completed: false
             },
             {
-                id: '7', title: 'Caminata Final al Barco', startTime: '17:30', endTime: '17:45',
+                id: '9', title: 'Caminata Final al Barco', startTime: '17:30', endTime: '17:45',
                 locationName: 'Centro -> Muelle', coords: COORDS.FLAM_DOCK,
                 description: 'Traslado tranquilo al muelle.',
                 fullDescription: 'Comienza a moverte tranquilamente hacia el muelle para el embarque.',
@@ -172,12 +190,12 @@
                 priceNOK: 0, priceEUR: 0, type: 'logistics', completed: false
             },
             {
-                id: '8', title: 'DEADLINE ¡A BORDO!', startTime: '17:45', endTime: '18:00',
+                id: '10', title: '¡A BORDO! (Límite 17:45)', startTime: '17:45', endTime: '18:00',
                 locationName: 'Muelle', coords: COORDS.FLAM_DOCK,
-                description: 'Hora Límite 17:45.',
-                fullDescription: 'Regreso obligatorio al barco. La pasarela se retira puntualmente.',
-                tips: '¡ADVERTENCIA! Hora límite de embarque: 17:45. Debes estar en el muelle sin falta.',
-                keyDetails: 'CRÍTICO: SALIDA DEL BARCO A LAS 18:00.',
+                description: 'Pasarela se retira 17:45. Zarpe 18:00.',
+                fullDescription: 'Regreso obligatorio al barco. A las 17:45 se retira la pasarela. A las 18:00 el barco inicia la maniobra de salida.',
+                tips: '¡ADVERTENCIA! No llegues tarde. Hora límite absoluta para embarcar: 17:45.',
+                keyDetails: 'CRÍTICO: SALIDA DEL BARCO 18:00.',
                 priceNOK: 0, priceEUR: 0, type: 'logistics', completed: false, notes: 'CRITICAL'
             }
         ];
