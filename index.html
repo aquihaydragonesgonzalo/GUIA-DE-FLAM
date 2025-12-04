@@ -46,9 +46,9 @@
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
     "lucide-react": "https://esm.sh/lucide-react@0.263.1",
     "leaflet": "https://aistudiocdn.com/leaflet@^1.9.4",
-    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1"
   }
 }
 </script>
@@ -82,7 +82,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow, Umbrella, X, Eye, Lightbulb, ChevronRight, Ticket, ChevronDown, Zap } from 'lucide-react';
+        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow, Umbrella, X, Eye, Lightbulb, ChevronRight, Ticket, ChevronDown, Zap, Calculator, ArrowRightLeft, RefreshCw } from 'lucide-react';
 
         // --- CONSTANTS & DATA ---
         const SHIP_DEPARTURE_TIME = "18:00";
@@ -319,12 +319,12 @@
             );
         };
 
-        // --- TIMELINE COMPONENT (UPDATED WITH BUFFER & NOW MARKER) ---
+        // --- TIMELINE COMPONENT ---
         const Timeline = ({ itinerary, onToggleComplete, onLocate, userLocation }) => {
             const [selectedActivity, setSelectedActivity] = useState(null);
             const [now, setNow] = useState(new Date());
 
-            // Update time every minute to refresh UI status
+            // Update time every minute
             useEffect(() => {
                 const interval = setInterval(() => setNow(new Date()), 60000);
                 return () => clearInterval(interval);
@@ -516,6 +516,37 @@
             const COLORS = ['#2A5B87', '#3A7D44', '#FFB347', '#94a3b8'];
             const paid = useMemo(() => itinerary.filter(a => a.priceEUR > 0), [itinerary]);
             
+            // Calculator State
+            const [rate, setRate] = useState(11.8); // Default fallback
+            const [calcAmount, setCalcAmount] = useState('');
+            const [calcMode, setCalcMode] = useState('EUR_TO_NOK'); // or 'NOK_TO_EUR'
+            const [rateLoading, setRateLoading] = useState(false);
+
+            // Fetch Live Exchange Rate
+            useEffect(() => {
+                setRateLoading(true);
+                fetch('https://api.exchangerate-api.com/v4/latest/EUR')
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.rates && data.rates.NOK) {
+                            setRate(data.rates.NOK);
+                        }
+                        setRateLoading(false);
+                    })
+                    .catch(e => {
+                        console.log("Offline or API error, using fallback rate");
+                        setRateLoading(false);
+                    });
+            }, []);
+            
+            // Calculator Result
+            const calcResult = useMemo(() => {
+                const val = parseFloat(calcAmount);
+                if(isNaN(val)) return '--';
+                if(calcMode === 'EUR_TO_NOK') return (val * rate).toFixed(2) + ' kr';
+                return '€' + (val / rate).toFixed(2);
+            }, [calcAmount, rate, calcMode]);
+
             // Total Planeado
             const totalEstimated = useMemo(() => paid.reduce((acc, c) => acc + (curr === 'EUR' ? c.priceEUR : c.priceNOK), 0), [paid, curr]);
             
@@ -533,6 +564,42 @@
                             {['EUR','NOK'].map(c => (
                                 <button key={c} onClick={() => setCurr(c)} className={`px-3 py-1 text-sm rounded-md font-bold ${curr===c?'bg-white shadow text-fjord-600':'text-slate-500'}`}>{c}</button>
                             ))}
+                        </div>
+                    </div>
+
+                    {/* --- CALCULATOR --- */}
+                    <div className="bg-white p-4 rounded-xl shadow-md border border-slate-100 mb-8">
+                        <div className="flex justify-between items-center mb-3">
+                            <h3 className="font-bold text-gray-700 flex items-center text-sm uppercase">
+                                <Calculator size={16} className="mr-2 text-fjord-500"/> Conversor Rápido
+                            </h3>
+                            <span className="text-xs text-slate-400 flex items-center">
+                                {rateLoading && <RefreshCw size={10} className="animate-spin mr-1"/>}
+                                1 EUR ≈ {rate.toFixed(2)} NOK
+                            </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <div className="relative flex-1">
+                                <span className="absolute left-3 top-2.5 text-gray-400 text-sm font-bold">
+                                    {calcMode === 'EUR_TO_NOK' ? '€' : 'kr'}
+                                </span>
+                                <input 
+                                    type="number" 
+                                    value={calcAmount}
+                                    onChange={(e) => setCalcAmount(e.target.value)}
+                                    placeholder="0"
+                                    className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-fjord-400 font-bold text-gray-800"
+                                />
+                            </div>
+                            <button 
+                                onClick={() => setCalcMode(prev => prev === 'EUR_TO_NOK' ? 'NOK_TO_EUR' : 'EUR_TO_NOK')}
+                                className="p-2 bg-slate-100 rounded-full text-fjord-600 hover:bg-slate-200"
+                            >
+                                <ArrowRightLeft size={18} />
+                            </button>
+                            <div className="flex-1 text-right bg-fjord-50 border border-fjord-100 py-2 px-3 rounded-lg">
+                                <span className="font-bold text-fjord-700 text-lg">{calcResult}</span>
+                            </div>
                         </div>
                     </div>
 
