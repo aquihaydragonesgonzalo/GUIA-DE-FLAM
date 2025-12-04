@@ -82,7 +82,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow, Umbrella, X, Eye, Lightbulb, ChevronRight, Ticket, ChevronDown, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils } from 'lucide-react';
+        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow, Umbrella, X, Eye, Lightbulb, ChevronRight, Ticket, ChevronDown, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils, Instagram } from 'lucide-react';
 
         // --- CONSTANTS & DATA ---
         const SHIP_DEPARTURE_TIME = "18:00";
@@ -126,7 +126,8 @@
                 tips: 'Aprovecha para sacar fotos del barco y el fiordo en la luz de la mañana. Es el mejor momento para fotos sin multitudes.',
                 keyDetails: 'Webcam en vivo disponible.',
                 priceNOK: 0, priceEUR: 0, type: 'logistics', completed: false, notes: 'Webcam disponible',
-                webcamUrl: 'https://www.norwaysbest.com/es/flam/webcam-de-flam'
+                webcamUrl: 'https://www.norwaysbest.com/es/flam/webcam-de-flam',
+                instagramUrl: 'https://www.instagram.com/explore/tags/flam/'
             },
             {
                 id: '4', title: 'El Tren (Flåmsbana)', startTime: '08:20', endTime: '10:28',
@@ -137,7 +138,8 @@
                 tips: '¡Toma el primer tren! Estarás en Myrdal antes de que lleguen otros cruceros.\n\n⭐ ASIENTOS: LADO IZQUIERDO SUBIDA – LADO DERECHO BAJADA.',
                 keyDetails: 'Ida y vuelta (~2 horas).',
                 priceNOK: 800, priceEUR: 70, type: 'transport', completed: false, notes: 'Parada en cascada Kjosfossen',
-                ticketUrl: 'https://www.norwaysbest.com/es/actividades/el-tren-de-flam'
+                ticketUrl: 'https://www.norwaysbest.com/es/actividades/el-tren-de-flam',
+                instagramUrl: 'https://www.instagram.com/explore/tags/flamsbana/'
             },
             {
                 id: '5', title: 'Bebida en Ægir BrewPub', startTime: '10:40', endTime: '11:40',
@@ -147,7 +149,8 @@
                 tips: '¡Tiempo para el festín! Disfruta de la chimenea y el ambiente vikingo antes del barco.',
                 keyDetails: 'Bebida en el pub vikingo (según presupuesto).',
                 priceNOK: 80, priceEUR: 8.50, type: 'food', completed: false,
-                ticketUrl: 'https://www.google.com/search?q=https://www.flamsbrygga.no/en/aegir-brewpub/&authuser=1'
+                ticketUrl: 'https://www.google.com/search?q=https://www.flamsbrygga.no/en/aegir-brewpub/&authuser=1',
+                instagramUrl: 'https://www.instagram.com/explore/tags/aegirbrewpub/'
             },
             {
                 id: '6', title: 'Fjord Cruise + Bus', startTime: '12:00', endTime: '14:30',
@@ -158,7 +161,8 @@
                 tips: 'Logística: Toma la salida del barco eléctrico a las 12:00. Navegas Flåm → Gudvangen, y tomas el bus de vuelta (shuttle incluido en el ticket) a Flåm.',
                 keyDetails: 'Duración total 2.5 horas.',
                 priceNOK: 950, priceEUR: 85, type: 'sightseeing', completed: false,
-                ticketUrl: 'https://www.norwaysbest.com/es/flam/actividades/crucero-por-el-fiordo-naeroyfjord'
+                ticketUrl: 'https://www.norwaysbest.com/es/flam/actividades/crucero-por-el-fiordo-naeroyfjord',
+                instagramUrl: 'https://www.instagram.com/explore/tags/nærøyfjord/'
             },
             {
                 id: '7', title: 'Mirador Stegastein', startTime: '15:00', endTime: '16:30',
@@ -169,7 +173,8 @@
                 tips: 'Toma el bus a las 15:00. Volverás con las espectaculares luces del atardecer primaveral sobre el fiordo.',
                 keyDetails: 'Tour en bus ida y vuelta.',
                 priceNOK: 450, priceEUR: 40, type: 'sightseeing', completed: false,
-                ticketUrl: 'https://www.norwaysbest.com/es/flam/actividades/mirador-stegastein'
+                ticketUrl: 'https://www.norwaysbest.com/es/flam/actividades/mirador-stegastein',
+                instagramUrl: 'https://www.instagram.com/explore/tags/stegastein/'
             },
             {
                 id: '8', title: 'Compras y Relax', startTime: '16:30', endTime: '17:30',
@@ -308,7 +313,7 @@
                                 )}
                             </div>
 
-                            {/* Buttons: Ticket & Webcam */}
+                            {/* Buttons: Ticket & Webcam & Instagram */}
                             <div className="space-y-3 mt-4">
                                 {activity.ticketUrl && (
                                     <a href={activity.ticketUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-md hover:bg-emerald-700 active:scale-95 transition-all">
@@ -321,6 +326,13 @@
                                     <a href={activity.webcamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold border border-red-100 hover:bg-red-100">
                                         <Camera size={18} className="mr-2" />
                                         Ver Webcam en Vivo
+                                    </a>
+                                )}
+
+                                {activity.instagramUrl && (
+                                    <a href={activity.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white rounded-xl font-bold shadow-md hover:opacity-90 active:scale-95 transition-all">
+                                        <Instagram size={20} className="mr-2" />
+                                        Fotos en Instagram
                                     </a>
                                 )}
                             </div>
