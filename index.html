@@ -38,7 +38,7 @@
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Import Map LIMPIO -->
+    <!-- Import Map (LIMPIO, SIN RECHARTS NI REACT 19) -->
     <script type="importmap">
 {
   "imports": {
@@ -78,7 +78,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Umbrella, X, Eye, Lightbulb, ChevronDown, Ticket, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils, Instagram, CloudRain, CloudSnow, Sun } from 'lucide-react';
+        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Umbrella, X, Eye, Lightbulb, ChevronDown, Ticket, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils, Instagram, CloudRain, CloudSnow, Sun, Smartphone } from 'lucide-react';
 
         // --- CONSTANTS ---
         const SHIP_DEPARTURE_TIME = "18:00";
@@ -532,7 +532,6 @@
             const totalSpent = useMemo(() => paid.filter(a => a.completed).reduce((acc, c) => acc + (curr === 'EUR' ? c.priceEUR : c.priceNOK), 0), [paid, curr]);
             const percentage = totalEstimated > 0 ? Math.min(100, Math.round((totalSpent / totalEstimated) * 100)) : 0;
 
-            // Simple distribution for chart replacement
             const typeDistribution = useMemo(() => {
                 const types = { transport: 0, food: 0, sightseeing: 0 };
                 paid.forEach(a => {
@@ -603,7 +602,6 @@
                          <div className="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-500" style={{ width: `${percentage}%` }}></div>
                     </div>
 
-                    {/* Chart Replacement: CSS Distribution Bar */}
                     <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-8">
                         <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase">Distribución de Costes</h3>
                         <div className="w-full h-6 flex rounded-full overflow-hidden mb-2">
@@ -700,14 +698,18 @@
                 <div className="pb-24 px-4 pt-6 max-w-lg mx-auto h-full overflow-y-auto">
                     <h2 className="text-2xl font-bold text-fjord-500 mb-6">Guía y Consejos</h2>
                     
-                    <div className="bg-red-600 text-white rounded-xl p-4 shadow-lg mb-6 flex flex-col items-center text-center border-2 border-red-400 animate-pulse">
-                        <div className="flex items-center justify-center mb-2">
-                            <AlertTriangle size={32} className="text-white mr-2" />
-                            <h3 className="text-xl font-bold">EMERGENCIA SOS</h3>
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="bg-red-600 text-white rounded-xl p-4 shadow-lg flex flex-col items-center text-center border-2 border-red-400 animate-pulse cursor-pointer" onClick={handleEmergency}>
+                            <AlertTriangle size={24} className="text-white mb-1" />
+                            <h3 className="text-sm font-bold">EMERGENCIA SOS</h3>
+                            <span className="text-[10px] mt-1 bg-white/20 px-2 rounded">Enviar Ubicación</span>
                         </div>
-                        <button onClick={handleEmergency} className="w-full bg-white text-red-600 font-bold py-3 px-4 rounded-lg shadow mt-2 flex items-center justify-center">
-                            <MapPin size={20} className="mr-2" /> ENVIAR MI UBICACIÓN
-                        </button>
+                        
+                        <a href="intent://#Intent;package=com.msc.mscforme;end" className="bg-blue-900 text-white rounded-xl p-4 shadow-lg flex flex-col items-center text-center border border-blue-700 hover:bg-blue-800 transition-colors">
+                            <Smartphone size={24} className="text-white mb-1" />
+                            <h3 className="text-sm font-bold">App MSC for Me</h3>
+                            <span className="text-[10px] mt-1 bg-white/20 px-2 rounded">Abrir Aplicación</span>
+                        </a>
                     </div>
 
                     <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-5 rounded-xl shadow-lg mb-6">
