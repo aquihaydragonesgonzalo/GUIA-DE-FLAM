@@ -23,7 +23,10 @@
               mountain: { 500:'#3A7D44' },
               sunset: { 500:'#FFB347' }
             },
-            fontFamily: { sans: ['Roboto Condensed', 'sans-serif'] }
+            fontFamily: { sans: ['Roboto Condensed', 'sans-serif'] },
+            animation: {
+                'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            }
           }
         }
       }
@@ -46,9 +49,9 @@
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
     "lucide-react": "https://esm.sh/lucide-react@0.263.1",
     "leaflet": "https://aistudiocdn.com/leaflet@^1.9.4",
-    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
     "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/"
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1"
   }
 }
 </script>
@@ -59,9 +62,13 @@
     <style>
         body { background-color: #f8fafc; overscroll-behavior-y: none; }
         .leaflet-container { width: 100%; height: 100%; z-index: 0; }
-        ::-webkit-scrollbar { width: 4px; }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 4px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
@@ -616,6 +623,7 @@
             const [playing, setPlaying] = useState(null);
             const [weather, setWeather] = useState(null);
             const [forecast, setForecast] = useState([]);
+            const [hourlyForecast, setHourlyForecast] = useState([]);
             const [astronomy, setAstronomy] = useState(null);
             const [showCamera, setShowCamera] = useState(false);
 
@@ -626,6 +634,28 @@
                     .then(res => res.json())
                     .then(data => {
                         setWeather(data);
+                        
+                        // Process Hourly (07:00 - 18:00 for today)
+                        if (data.hourly) {
+                            const hourly = [];
+                            // Loop through first 24 indices (Today)
+                            for(let i = 0; i < 24; i++) {
+                                const timeStr = data.hourly.time[i]; // "2025-12-04T07:00"
+                                const hourStr = timeStr.split('T')[1].split(':')[0];
+                                const hour = parseInt(hourStr, 10);
+                                
+                                if (hour >= 7 && hour <= 18) {
+                                    hourly.push({
+                                        time: `${hourStr}:00`,
+                                        temp: Math.round(data.hourly.temperature_2m[i]),
+                                        precip: data.hourly.precipitation_probability[i],
+                                        code: data.hourly.weather_code[i]
+                                    });
+                                }
+                            }
+                            setHourlyForecast(hourly);
+                        }
+
                         // Process 5-day forecast
                         if(data.daily) {
                             const days = data.daily.time.map((t, i) => ({
@@ -821,7 +851,26 @@
                         {renderSolarChart()}
                     </div>
 
-                    {/* Weather Forecast */}
+                    {/* Hourly Weather Forecast (07:00 - 18:00) */}
+                    {hourlyForecast.length > 0 && (
+                        <div className="mb-8">
+                             <h3 className="font-bold text-slate-700 mb-4 flex items-center"><Clock size={18} className="mr-2 text-blue-500"/> Clima por Horas (07:00 - 18:00)</h3>
+                             <div className="flex overflow-x-auto pb-4 space-x-3 snap-x">
+                                {hourlyForecast.map((hour, idx) => (
+                                    <div key={idx} className="flex-none w-20 bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center justify-center snap-center">
+                                        <span className="text-xs font-bold text-slate-400 mb-2">{hour.time}</span>
+                                        <div className="mb-2 scale-125">{getWeatherIcon(hour.code)}</div>
+                                        <span className="text-lg font-bold text-slate-800">{hour.temp}°</span>
+                                        <div className="flex items-center text-[10px] text-blue-500 font-medium mt-1">
+                                            <Droplets size={8} className="mr-1"/> {hour.precip}%
+                                        </div>
+                                    </div>
+                                ))}
+                             </div>
+                        </div>
+                    )}
+
+                    {/* 5-Day Forecast */}
                     <div className="mb-8">
                          <h3 className="font-bold text-slate-700 mb-4 flex items-center"><CloudSun size={18} className="mr-2 text-blue-500"/> Pronóstico 5 Días</h3>
                          <div className="bg-white rounded-xl shadow-sm border border-slate-200 divide-y divide-slate-100">
@@ -956,10 +1005,12 @@
             useEffect(() => {
                 const interval = setInterval(() => {
                     const now = new Date();
-                    const [h, m] = SHIP_DEPARTURE_TIME.split(':').map(Number);
+                    // Changed to count down to ONBOARD_TIME for safety
+                    const [h, m] = ONBOARD_TIME.split(':').map(Number);
                     const target = new Date(); target.setHours(h, m, 0, 0);
                     const diff = target - now;
-                    if (diff <= 0) setCountdown("¡ZARPANDO!");
+                    
+                    if (diff <= 0) setCountdown("¡A BORDO!");
                     else {
                         const hr = Math.floor(diff/(1000*60*60));
                         const mn = Math.floor((diff%(1000*60*60))/(1000*60));
@@ -985,8 +1036,8 @@
                         <div className="flex items-center">
                             <Anchor className="mr-2 text-sunset-500" size={20} />
                             <div>
-                                <h1 className="font-bold text-sm leading-none">Salida: {SHIP_DEPARTURE_TIME}</h1>
-                                <p className="text-[10px] text-fjord-200">Todos a bordo {ONBOARD_TIME}</p>
+                                <h1 className="font-bold text-sm leading-none">Todos a Bordo: {ONBOARD_TIME}</h1>
+                                <p className="text-[10px] text-fjord-200">Salida Barco: {SHIP_DEPARTURE_TIME}</p>
                             </div>
                         </div>
                         <div className="text-right font-mono font-bold text-lg text-sunset-500">{countdown}</div>
