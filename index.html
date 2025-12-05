@@ -500,7 +500,10 @@
                         })}
                     </div>
                     <ActivityDetailModal activity={selectedActivity} onClose={() => setSelectedActivity(null)} />
-                    <div className="mt-8 text-center text-xs text-slate-400 pb-4">{UPDATE_DATE}</div>
+                    <div className="mt-8 text-center text-xs text-slate-400 pb-4">
+                        <div>{UPDATE_DATE}</div>
+                        <div className="mt-1 font-medium text-slate-500">© 2025 - 2026 Gonzalo Arenas de la Hoz</div>
+                    </div>
                 </div>
             );
         };
@@ -814,7 +817,10 @@
                             </div>
                         ))}
                     </div>
-                    <div className="mt-8 text-center text-xs text-slate-400 pb-4">Actualizado el {UPDATE_DATE}</div>
+                    <div className="mt-8 text-center text-xs text-slate-400 pb-4">
+                        <div>Actualizado el {UPDATE_DATE}</div>
+                        <div className="mt-1 font-medium text-slate-500">© 2025 - 2026 Gonzalo Arenas de la Hoz</div>
+                    </div>
                 </div>
             );
         };
