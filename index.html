@@ -9,7 +9,7 @@
     
     <!-- PWA -->
     <link rel="manifest" href="./manifest.json">
-    <link rel="icon" href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhcA0a_MFgQpkEks6XXvRI9ekfq5qrYfMtxOG8HuGchmFveZ0yYGSKmg1MXKNRAw8Snc-ZD5iHimhmGEv9YBd9jNhcoLoYAK7eVaxEab_NF3R3TXQcmCYtn5eFD34tQxs5j1yUiD9s0MKmdVTKi4iVZPC4AwCqhkntHp9vkeKC-Kj4q47VsePLnxWbY1_g/s2048/Gemini_Generated_Image_5e2y1u5e2y1u5e2y.png" />
+    <link rel="icon" href="./icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     
     <!-- Tailwind CSS -->
@@ -38,17 +38,17 @@
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Import Map (LIMPIO, SIN RECHARTS NI REACT 19) -->
+    <!-- Import Map -->
     <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@18.2.0",
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
     "lucide-react": "https://esm.sh/lucide-react@0.263.1",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "leaflet": "https://aistudiocdn.com/leaflet@^1.9.4",
     "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
-    "leaflet": "https://aistudiocdn.com/leaflet@^1.9.4"
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/"
   }
 }
 </script>
@@ -78,7 +78,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Umbrella, X, Eye, Lightbulb, ChevronDown, Ticket, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils, Instagram, CloudRain, CloudSnow, Sun, Smartphone, Sunrise, Sunset } from 'lucide-react';
+        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Umbrella, X, Eye, Lightbulb, ChevronDown, Ticket, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils, Instagram, CloudRain, CloudSnow, Sun, Smartphone, Sunrise, Sunset, Moon, Play } from 'lucide-react';
 
         // --- CONSTANTS ---
         const SHIP_DEPARTURE_TIME = "18:00";
@@ -239,6 +239,14 @@
             return h > 0 && m > 0 ? `${h}h ${m}m` : (h > 0 ? `${h}h` : `${m} min`);
         };
 
+        const calculateTimeGap = (endPrevious, startNext) => {
+            const [eh, em] = endPrevious.split(':').map(Number);
+            const [sh, sm] = startNext.split(':').map(Number);
+            let diff = (sh*60+sm) - (eh*60+em);
+            if (diff <= 0) return null;
+            return diff < 60 ? `${diff} min` : `${Math.floor(diff/60)}h ${diff%60}m`;
+        };
+
         const formatTimeRemaining = (targetTimeStr) => {
             const now = new Date();
             const [h, m] = targetTimeStr.split(':').map(Number);
@@ -251,388 +259,351 @@
         };
 
         // --- COMPONENTS ---
+
         const ActivityDetailModal = ({ activity, onClose }) => {
             if (!activity) return null;
 
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-                    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden modal-content relative flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
-                        <div className="bg-fjord-600 p-4 text-white relative">
-                            <button onClick={onClose} className="absolute top-4 right-4 p-1 bg-white/20 rounded-full hover:bg-white/30">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] modal-content">
+                        {/* Header */}
+                        <div className="bg-fjord-500 p-4 text-white relative">
+                            <h3 className="text-xl font-bold pr-8">{activity.title}</h3>
+                            <div className="flex items-center text-fjord-100 text-sm mt-1">
+                                <Clock size={14} className="mr-1" />
+                                {activity.startTime} - {activity.endTime}
+                            </div>
+                            <button onClick={onClose} className="absolute top-4 right-4 text-white/80 hover:text-white bg-white/10 rounded-full p-1">
                                 <X size={20} />
                             </button>
-                            <h2 className="text-xl font-bold pr-8 leading-tight">{activity.title}</h2>
-                            <div className="flex items-center space-x-2 mt-2 text-fjord-100 text-sm font-medium">
-                                <Clock size={16} />
-                                <span>{activity.startTime} - {activity.endTime}</span>
-                            </div>
                         </div>
-
-                        <div className="p-6 overflow-y-auto">
-                            <div className="mb-6">
-                                <h3 className="flex items-center text-fjord-600 font-bold mb-2 uppercase text-sm tracking-wider">
-                                    <Eye size={18} className="mr-2" /> Qué veremos
-                                </h3>
-                                <p className="text-gray-700 leading-relaxed text-[15px]">
-                                    {activity.fullDescription || activity.description}
-                                </p>
+                        
+                        {/* Content */}
+                        <div className="p-5 overflow-y-auto">
+                            <div className="mb-4">
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Descripción</h4>
+                                <p className="text-gray-700 leading-relaxed">{activity.fullDescription || activity.description}</p>
                             </div>
-
-                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-                                <h3 className="flex items-center text-amber-700 font-bold mb-2 uppercase text-sm tracking-wider">
-                                    <Lightbulb size={18} className="mr-2" /> Claves y Consejos
-                                </h3>
-                                <p className="text-gray-800 text-sm whitespace-pre-line leading-relaxed">
-                                    {activity.tips || activity.keyDetails}
-                                </p>
+                            
+                            <div className="mb-4 bg-orange-50 p-3 rounded-lg border border-orange-100">
+                                <h4 className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-1 flex items-center">
+                                    <Lightbulb size={12} className="mr-1" /> Consejo Pro
+                                </h4>
+                                <p className="text-sm text-orange-800 italic">{activity.tips}</p>
                             </div>
-
-                            <div className="flex flex-col space-y-2 text-sm text-gray-500 mb-4">
-                                <div className="flex items-center">
-                                    <MapPin size={16} className="text-fjord-500 mr-2" />
-                                    <span className="font-semibold text-gray-700">Inicio:</span>
-                                    <span className="ml-1">{activity.locationName}</span>
-                                </div>
-                                {activity.endLocationName && (
-                                    <div className="flex items-center">
-                                        <MapPin size={16} className="text-mountain-500 mr-2" />
-                                        <span className="font-semibold text-gray-700">Fin:</span>
-                                        <span className="ml-1">{activity.endLocationName}</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="space-y-3 mt-4">
-                                {activity.ticketUrl && (
-                                    <a href={activity.ticketUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-md hover:bg-emerald-700 active:scale-95 transition-all">
-                                        <Ticket size={20} className="mr-2" />
-                                        Comprar Tickets Online
-                                    </a>
-                                )}
+                            
+                            {/* Instagram Button */}
+                            {activity.instagramUrl && (
+                                <a href={activity.instagramUrl} target="_blank" rel="noopener noreferrer" 
+                                   className="flex items-center justify-center w-full mb-4 p-3 rounded-xl bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white font-bold shadow-md hover:shadow-lg transition-all active:scale-95">
+                                    <Instagram className="mr-2" size={20} />
+                                    Ver Fotos en Instagram
+                                </a>
+                            )}
+                            
+                            {/* Actions */}
+                            <div className="space-y-3 pt-2">
                                 {activity.webcamUrl && (
-                                    <a href={activity.webcamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold border border-red-100 hover:bg-red-100">
-                                        <Camera size={18} className="mr-2" />
+                                    <a href={activity.webcamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full p-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors">
+                                        <Camera className="mr-2" size={18} />
                                         Ver Webcam en Vivo
                                     </a>
                                 )}
-                                {activity.instagramUrl && (
-                                    <a href={activity.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white rounded-xl font-bold shadow-md hover:opacity-90 active:scale-95 transition-all">
-                                        <Instagram size={20} className="mr-2" />
-                                        Fotos en Instagram
+                                
+                                {activity.ticketUrl && (
+                                    <a href={activity.ticketUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full p-3 bg-emerald-600 text-white rounded-xl font-bold shadow-md hover:bg-emerald-700 transition-colors">
+                                        <Ticket className="mr-2" size={18} />
+                                        Comprar Tickets Online
                                     </a>
                                 )}
                             </div>
-                        </div>
-
-                        <div className="p-4 border-t border-gray-100 bg-gray-50">
-                            <button onClick={onClose} className="w-full py-3 bg-fjord-600 text-white rounded-xl font-bold shadow-md active:scale-95 transition-transform">
-                                Cerrar
-                            </button>
                         </div>
                     </div>
                 </div>
             );
         };
 
-        const Timeline = ({ itinerary, onToggleComplete, onLocate, userLocation }) => {
-            const [selectedActivity, setSelectedActivity] = useState(null);
-            const [now, setNow] = useState(new Date());
-
-            useEffect(() => {
-                const interval = setInterval(() => setNow(new Date()), 60000);
-                return () => clearInterval(interval);
-            }, []);
-
-            const getMinutes = (timeStr) => {
-                const [h, m] = timeStr.split(':').map(Number);
-                return h * 60 + m;
-            };
-
-            const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
+        const Timeline = ({ itinerary, onToggleComplete, onLocate, userLocation, onSelectActivity }) => {
+            const now = new Date();
+            const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+            
             return (
                 <div className="pb-24 px-4 pt-4 max-w-lg mx-auto">
-                    <h2 className="text-2xl font-bold text-fjord-500 mb-6">Itinerario Lujo Matutino</h2>
-                    <div className="relative border-l-2 border-fjord-200 ml-3">
+                    <h2 className="text-2xl font-bold text-fjord-500 mb-2">Itinerario Lujo Matutino</h2>
+                    <p className="text-xs text-slate-500 mb-6 flex items-center">
+                        <Info size={12} className="mr-1"/> Toca una tarjeta para ver detalles
+                    </p>
+                    
+                    <div className="relative border-l-2 border-slate-200 ml-3">
                         {itinerary.map((act, index) => {
-                            const duration = calculateDuration(act.startTime, act.endTime);
+                            const [sh, sm] = act.startTime.split(':').map(Number);
+                            const [eh, em] = act.endTime.split(':').map(Number);
+                            const startMinutes = sh * 60 + sm;
+                            const endMinutes = eh * 60 + em;
+                            
+                            // Status Checks
+                            const isActive = currentTimeMinutes >= startMinutes && currentTimeMinutes < endMinutes;
+                            const isPast = currentTimeMinutes >= endMinutes;
                             const isCritical = act.notes === 'CRITICAL';
-                            const dist = userLocation ? calculateDistance(userLocation, act.coords) : null;
-                            const startMins = getMinutes(act.startTime);
-                            const endMins = getMinutes(act.endTime);
-                            const isActive = currentMinutes >= startMins && currentMinutes < endMins;
-                            const totalDurationMins = endMins - startMins;
-                            const elapsedMins = currentMinutes - startMins;
-                            const progressPercent = isActive ? Math.min(100, Math.max(0, (elapsedMins / totalDurationMins) * 100)) : 0;
+                            const duration = calculateDuration(act.startTime, act.endTime);
+                            
+                            // Calculate Gap to next activity
+                            let gapElement = null;
+                            if (index < itinerary.length - 1) {
+                                const nextAct = itinerary[index + 1];
+                                const gap = calculateTimeGap(act.endTime, nextAct.startTime);
+                                if (gap) {
+                                    // Check if NOW is in the gap
+                                    const [nsh, nsm] = nextAct.startTime.split(':').map(Number);
+                                    const nextStartMinutes = nsh * 60 + nsm;
+                                    const isGapNow = currentTimeMinutes >= endMinutes && currentTimeMinutes < nextStartMinutes;
 
-                            let bufferElement = null;
-                            let nowMarker = null;
-
-                            if (index > 0) {
-                                const prev = itinerary[index - 1];
-                                const prevEndMins = getMinutes(prev.endTime);
-                                const diff = startMins - prevEndMins;
-                                if (diff > 0) {
-                                     const h = Math.floor(diff/60);
-                                     const m = diff%60;
-                                     const label = h > 0 ? `${h}h ${m}m` : `${m} min`;
-                                     bufferElement = (
-                                        <div className="ml-6 mb-6 flex items-center">
-                                            <div className="absolute -left-[6px] w-3 h-3 bg-slate-300 rounded-full border-2 border-white"></div>
-                                            <span className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-full border border-slate-200 flex items-center shadow-sm">
-                                                <ChevronDown size={14} className="mr-1 text-slate-400" />
-                                                {label} traslado/libre
-                                            </span>
-                                        </div>
-                                     );
-                                } else {
-                                    bufferElement = <div className="h-6"></div>;
-                                }
-
-                                if (currentMinutes > prevEndMins && currentMinutes < startMins) {
-                                    nowMarker = (
-                                        <div className="ml-6 mb-6 flex items-center animate-pulse">
-                                            <div className="absolute -left-[5px] w-2.5 h-2.5 bg-red-500 rounded-full ring-4 ring-red-100"></div>
-                                            <div className="w-full h-[2px] bg-red-500 ml-2 relative">
-                                                <span className="absolute -top-3 left-2 text-[10px] font-bold text-red-600 bg-white px-1">
-                                                    🕒 AHORA {now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                    gapElement = (
+                                        <div className="relative pl-6 py-4">
+                                            {isGapNow && (
+                                                <div className="absolute left-[-6px] top-1/2 -translate-y-1/2 w-full flex items-center z-10">
+                                                    <div className="w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow"></div>
+                                                    <div className="h-[2px] bg-red-500 w-full opacity-50"></div>
+                                                    <span className="absolute right-0 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded font-bold">
+                                                        AHORA {now.getHours()}:{String(now.getMinutes()).padStart(2,'0')}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <div className="flex items-center justify-center">
+                                                <span className="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded-full border border-slate-200 flex items-center">
+                                                    <ChevronDown size={12} className="mr-1" />
+                                                    {gap} traslado / libre
                                                 </span>
                                             </div>
                                         </div>
                                     );
                                 }
-                            } else {
-                                if (currentMinutes < startMins) {
-                                     nowMarker = (
-                                        <div className="ml-6 mb-6 flex items-center">
-                                            <div className="absolute -left-[5px] w-2.5 h-2.5 bg-red-500 rounded-full"></div>
-                                            <span className="text-xs font-bold text-red-500 ml-2 bg-red-50 px-2 py-0.5 rounded">
-                                                🕒 Esperando inicio ({now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})})
-                                            </span>
-                                        </div>
-                                     );
-                                }
+                            }
+
+                            // Calculate Progress if Active
+                            let progress = 0;
+                            if (isActive) {
+                                const totalDuration = endMinutes - startMinutes;
+                                const elapsed = currentTimeMinutes - startMinutes;
+                                progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
                             }
 
                             return (
                                 <React.Fragment key={act.id}>
-                                    {bufferElement}
-                                    {nowMarker}
-                                    
-                                    <div className="mb-6 ml-6 relative">
-                                        <div className={`absolute -left-[31px] top-0 rounded-full bg-white border-2 cursor-pointer z-10 transition-colors ${
-                                            isActive ? 'border-blue-500 text-blue-500 ring-4 ring-blue-100' :
-                                            (act.completed ? 'border-emerald-500 text-emerald-500' : 'border-fjord-500 text-fjord-500')
-                                        }`} onClick={(e) => { e.stopPropagation(); onToggleComplete(act.id); }}>
-                                            {act.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
-                                        </div>
-                                        
+                                    <div className="pl-6 relative group">
+                                        {/* Dot */}
                                         <div 
-                                            className={`p-4 rounded-lg border shadow-sm transition-all cursor-pointer active:scale-[0.98] 
-                                                ${isActive ? 'active-card bg-white border-blue-500 ring-1 ring-blue-200 shadow-lg' : 
-                                                (act.completed ? 'bg-emerald-50 border-emerald-500' : 
-                                                (isCritical ? 'bg-red-50 border-red-500' : 'bg-white border-fjord-100 hover:shadow-md'))}
-                                            `}
-                                            onClick={() => setSelectedActivity(act)}
+                                            className={`absolute -left-[9px] top-4 w-5 h-5 rounded-full border-4 cursor-pointer transition-all bg-white z-10 ${
+                                                act.completed ? 'border-emerald-500' : isActive ? 'border-blue-500 scale-125' : 'border-slate-300'
+                                            }`}
+                                            onClick={(e) => { e.stopPropagation(); onToggleComplete(act.id); }}
                                         >
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div>
-                                                    <div className="flex items-center space-x-2 mb-1">
-                                                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${isActive ? 'bg-blue-600 text-white' : 'bg-fjord-100 text-fjord-700'}`}>
-                                                            {act.startTime} - {act.endTime}
-                                                        </span>
-                                                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border">{duration}</span>
-                                                        
-                                                        {isActive && (
-                                                            <span className="flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-700 animate-pulse border border-blue-200">
-                                                                <Zap size={10} className="mr-1 fill-blue-700" /> EN CURSO
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <h3 className="font-bold text-lg text-gray-800 leading-tight flex items-center">
-                                                        {act.title}
-                                                        <Info size={14} className="ml-2 text-fjord-400" />
-                                                    </h3>
-                                                </div>
-                                                {isCritical && <AlertTriangle className="text-red-500 animate-pulse" size={20} />}
-                                            </div>
+                                            {act.completed && <div className="w-full h-full bg-emerald-500 rounded-full scale-50" />}
+                                        </div>
 
+                                        {/* Card */}
+                                        <div 
+                                            onClick={() => onSelectActivity(act)}
+                                            className={`
+                                                relative p-4 rounded-xl border shadow-sm transition-all cursor-pointer overflow-hidden
+                                                ${isActive ? 'bg-white border-blue-400 ring-2 ring-blue-100 shadow-blue-100' : 'bg-white border-slate-200 hover:border-blue-300'}
+                                                ${act.completed ? 'opacity-70 bg-slate-50' : ''}
+                                                ${isCritical ? 'bg-red-50 border-red-200' : ''}
+                                            `}
+                                        >
                                             {isActive && (
-                                                <div className="w-full bg-slate-100 rounded-full h-1.5 mb-3 overflow-hidden">
-                                                    <div className="bg-blue-500 h-1.5 rounded-full transition-all duration-1000" style={{ width: `${progressPercent}%` }}></div>
+                                                <div className="absolute top-0 left-0 w-full h-1 bg-blue-100">
+                                                    <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${progress}%` }}></div>
                                                 </div>
                                             )}
 
-                                            <div className="mb-3 text-sm text-gray-600 flex items-center flex-wrap gap-1">
-                                                <span className="font-medium flex items-center"><MapPin size={14} className="mr-0.5 text-fjord-500"/> {act.locationName}</span>
-                                                {dist !== null && (
-                                                    <span className="ml-2 text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold border border-emerald-200">
-                                                        A {formatDistance(dist)}
-                                                    </span>
-                                                )}
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <div className="flex items-center space-x-2 mb-1">
+                                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${isActive ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                                                            {act.startTime}
+                                                        </span>
+                                                        <span className="text-xs text-slate-400 font-medium">{duration}</span>
+                                                        {isActive && <span className="text-[10px] font-bold text-blue-600 animate-pulse">⚡ EN CURSO</span>}
+                                                    </div>
+                                                    <h3 className={`font-bold text-lg leading-tight ${isCritical ? 'text-red-700' : 'text-slate-800'}`}>
+                                                        {act.title}
+                                                    </h3>
+                                                </div>
+                                                {act.ticketUrl && <Ticket size={18} className="text-emerald-500" />}
+                                                {isCritical && <AlertTriangle size={20} className="text-red-500" />}
                                             </div>
-                                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{act.description}</p>
-                                            
-                                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100" onClick={e => e.stopPropagation()}>
-                                                <div className="flex items-center space-x-2 overflow-x-auto hide-scrollbar">
-                                                    <button onClick={() => onLocate(act.coords, act.endCoords)} className="flex items-center text-xs font-medium text-fjord-600 bg-fjord-50 px-2 py-1 rounded hover:bg-fjord-100 whitespace-nowrap">
-                                                        <MapPin size={14} className="mr-1" /> {act.endCoords ? 'Ruta' : 'Mapa'}
-                                                    </button>
-                                                    {act.ticketUrl && (
-                                                        <a href={act.ticketUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 hover:bg-emerald-100 whitespace-nowrap">
-                                                            <Ticket size={14} className="mr-1" /> Tickets
-                                                        </a>
-                                                    )}
-                                                    {act.webcamUrl && (
-                                                        <a href={act.webcamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 hover:bg-red-100 whitespace-nowrap">
-                                                            <Camera size={14} className="mr-1" /> Webcam
-                                                        </a>
+
+                                            <p className="text-sm text-slate-600 line-clamp-2 mb-2">{act.description}</p>
+
+                                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                                                <div className="flex items-center text-xs text-slate-500">
+                                                    <MapPin size={12} className="mr-1" />
+                                                    {act.locationName}
+                                                    {userLocation && (
+                                                        <span className="ml-2 text-blue-600 font-medium">
+                                                            ({formatDistance(calculateDistance(userLocation, act.coords))})
+                                                        </span>
                                                     )}
                                                 </div>
-                                                <button onClick={() => onToggleComplete(act.id)} className={`ml-2 px-3 py-1.5 rounded text-xs font-bold uppercase whitespace-nowrap ${act.completed ? 'bg-emerald-100 text-emerald-700' : 'bg-fjord-500 text-white'}`}>
-                                                    {act.completed ? 'Listo' : 'Check-in'}
+                                                
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); onLocate(act.coords, act.endCoords); }}
+                                                    className="p-1.5 hover:bg-slate-100 rounded-full text-fjord-600"
+                                                >
+                                                    <MapIcon size={16} />
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
+                                    {gapElement}
                                 </React.Fragment>
                             );
                         })}
-                    </div>
-                    <ActivityDetailModal activity={selectedActivity} onClose={() => setSelectedActivity(null)} />
-                    <div className="mt-8 text-center text-xs text-slate-400 pb-4">
-                        <div>{UPDATE_DATE}</div>
-                        <div className="mt-1 font-medium text-slate-500">© 2025 - 2026 Gonzalo Arenas de la Hoz</div>
+                        
+                        {/* Copyright Footer */}
+                        <div className="text-center py-8 text-slate-400 text-xs mt-4">
+                            <p className="font-medium">Flåm Guide 2026</p>
+                            <p>Actualizado el {UPDATE_DATE}</p>
+                            <p className="mt-1">© 2025 - 2026 Gonzalo Arenas de la Hoz</p>
+                        </div>
                     </div>
                 </div>
             );
         };
 
-        const Budget = ({ itinerary, onToggleComplete }) => {
-            const [curr, setCurr] = useState('EUR');
-            const paid = useMemo(() => itinerary.filter(a => a.priceEUR > 0), [itinerary]);
-            const [rate, setRate] = useState(11.8);
+        const Budget = ({ itinerary }) => {
+            const [currency, setCurrency] = useState('EUR'); // EUR or NOK
+            const [rate, setRate] = useState(11.8); // Default fallback rate
             const [calcAmount, setCalcAmount] = useState('');
             const [calcMode, setCalcMode] = useState('EUR_TO_NOK');
-            const [rateLoading, setRateLoading] = useState(false);
+            
+            // Toggle completed items for budget
+            const [paidItems, setPaidItems] = useState(
+                itinerary.filter(a => a.priceEUR > 0).map(a => a.id) // Default all checked
+            );
 
+            // Fetch Live Rate
             useEffect(() => {
-                setRateLoading(true);
                 fetch('https://api.exchangerate-api.com/v4/latest/EUR')
                     .then(res => res.json())
-                    .then(data => { if(data.rates?.NOK) setRate(data.rates.NOK); setRateLoading(false); })
-                    .catch(() => setRateLoading(false));
+                    .then(data => {
+                        if(data && data.rates && data.rates.NOK) {
+                            setRate(data.rates.NOK);
+                        }
+                    })
+                    .catch(err => console.log('Using offline rate'));
             }, []);
-            
-            const calcResult = useMemo(() => {
+
+            const togglePaid = (id) => {
+                if (paidItems.includes(id)) {
+                    setPaidItems(paidItems.filter(i => i !== id));
+                } else {
+                    setPaidItems([...paidItems, id]);
+                }
+            };
+
+            const stats = useMemo(() => {
+                const totalEUR = itinerary.reduce((sum, item) => sum + item.priceEUR, 0);
+                const currentEUR = itinerary
+                    .filter(item => paidItems.includes(item.id))
+                    .reduce((sum, item) => sum + item.priceEUR, 0);
+                
+                return {
+                    total: currency === 'EUR' ? totalEUR : totalEUR * rate,
+                    current: currency === 'EUR' ? currentEUR : currentEUR * rate,
+                    pending: currency === 'EUR' ? (totalEUR - currentEUR) : (totalEUR - currentEUR) * rate
+                };
+            }, [itinerary, paidItems, currency, rate]);
+
+            // Conversion logic
+            const convertedValue = useMemo(() => {
                 const val = parseFloat(calcAmount);
-                if(isNaN(val)) return '--';
-                if(calcMode === 'EUR_TO_NOK') return (val * rate).toFixed(2) + ' kr';
-                return '€' + (val / rate).toFixed(2);
-            }, [calcAmount, rate, calcMode]);
-
-            const totalEstimated = useMemo(() => paid.reduce((acc, c) => acc + (curr === 'EUR' ? c.priceEUR : c.priceNOK), 0), [paid, curr]);
-            const totalSpent = useMemo(() => paid.filter(a => a.completed).reduce((acc, c) => acc + (curr === 'EUR' ? c.priceEUR : c.priceNOK), 0), [paid, curr]);
-            const percentage = totalEstimated > 0 ? Math.min(100, Math.round((totalSpent / totalEstimated) * 100)) : 0;
-
-            const typeDistribution = useMemo(() => {
-                const types = { transport: 0, food: 0, sightseeing: 0 };
-                paid.forEach(a => {
-                    const price = curr === 'EUR' ? a.priceEUR : a.priceNOK;
-                    if(types[a.type] !== undefined) types[a.type] += price;
-                    else types.sightseeing += price; // Fallback
-                });
-                return types;
-            }, [paid, curr]);
-            
-            const maxVal = Math.max(1, totalEstimated);
-            const wTransport = (typeDistribution.transport / maxVal) * 100;
-            const wFood = (typeDistribution.food / maxVal) * 100;
-            const wSightseeing = (typeDistribution.sightseeing / maxVal) * 100;
+                if (isNaN(val)) return '---';
+                if (calcMode === 'EUR_TO_NOK') return (val * rate).toFixed(2) + ' kr';
+                return (val / rate).toFixed(2) + ' €';
+            }, [calcAmount, calcMode, rate]);
 
             return (
                 <div className="pb-24 px-4 pt-6 max-w-lg mx-auto h-full overflow-y-auto">
+                    {/* Header & Currency Toggle */}
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-fjord-500 flex items-center"><Wallet className="mr-2"/> Gastos</h2>
+                        <h2 className="text-2xl font-bold text-fjord-500 flex items-center">
+                            <Wallet className="mr-2" /> Gastos
+                        </h2>
                         <div className="flex bg-slate-200 rounded-lg p-1">
-                            {['EUR','NOK'].map(c => (
-                                <button key={c} onClick={() => setCurr(c)} className={`px-3 py-1 text-sm rounded-md font-bold ${curr===c?'bg-white shadow text-fjord-600':'text-slate-500'}`}>{c}</button>
-                            ))}
+                            <button onClick={() => setCurrency('EUR')} className={`px-3 py-1 text-sm rounded-md font-bold transition-all ${currency === 'EUR' ? 'bg-white shadow text-fjord-600' : 'text-slate-500'}`}>EUR</button>
+                            <button onClick={() => setCurrency('NOK')} className={`px-3 py-1 text-sm rounded-md font-bold transition-all ${currency === 'NOK' ? 'bg-white shadow text-fjord-600' : 'text-slate-500'}`}>NOK</button>
                         </div>
                     </div>
 
-                    <div className="bg-white p-4 rounded-xl shadow-md border border-slate-100 mb-8">
-                        <div className="flex justify-between items-center mb-3">
-                            <h3 className="font-bold text-gray-700 flex items-center text-sm uppercase">
-                                <Calculator size={16} className="mr-2 text-fjord-500"/> Conversor
+                    {/* Converter Tool */}
+                    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6">
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-xs font-bold text-slate-400 uppercase flex items-center">
+                                <Calculator size={12} className="mr-1"/> Conversor (1€ ≈ {rate.toFixed(2)} kr)
                             </h3>
-                            <span className="text-xs text-slate-400 flex items-center">
-                                {rateLoading && <RefreshCw size={10} className="animate-spin mr-1"/>}
-                                1 EUR ≈ {rate.toFixed(2)} NOK
-                            </span>
+                            <button onClick={() => setCalcMode(prev => prev === 'EUR_TO_NOK' ? 'NOK_TO_EUR' : 'EUR_TO_NOK')} className="p-1 bg-slate-100 rounded hover:bg-slate-200">
+                                <ArrowRightLeft size={14} className="text-slate-600" />
+                            </button>
                         </div>
                         <div className="flex items-center space-x-2">
                             <div className="relative flex-1">
-                                <span className="absolute left-3 top-2.5 text-gray-400 text-sm font-bold">
+                                <input 
+                                    type="number" 
+                                    value={calcAmount}
+                                    onChange={(e) => setCalcAmount(e.target.value)}
+                                    placeholder="Cantidad"
+                                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-lg outline-none focus:border-fjord-500"
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-bold">
                                     {calcMode === 'EUR_TO_NOK' ? '€' : 'kr'}
                                 </span>
-                                <input 
-                                    type="number" value={calcAmount} onChange={(e) => setCalcAmount(e.target.value)}
-                                    placeholder="0" className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-fjord-400 font-bold text-gray-800"
-                                />
                             </div>
-                            <button onClick={() => setCalcMode(prev => prev === 'EUR_TO_NOK' ? 'NOK_TO_EUR' : 'EUR_TO_NOK')} className="p-2 bg-slate-100 rounded-full text-fjord-600 hover:bg-slate-200">
-                                <ArrowRightLeft size={18} />
-                            </button>
-                            <div className="flex-1 text-right bg-fjord-50 border border-fjord-100 py-2 px-3 rounded-lg">
-                                <span className="font-bold text-fjord-700 text-lg">{calcResult}</span>
+                            <div className="text-slate-400"><ArrowRight size={16}/></div>
+                            <div className="flex-1 p-2 bg-fjord-50 border border-fjord-100 rounded-lg text-lg font-bold text-fjord-700 text-center">
+                                {convertedValue}
                             </div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                        <div className="bg-white rounded-xl p-4 shadow border border-slate-100">
-                            <p className="text-slate-500 text-xs uppercase font-bold">Gastado</p>
-                            <div className="text-2xl font-bold text-emerald-600 mt-1">{curr === 'EUR' ? `€${totalSpent}` : `${totalSpent} kr`}</div>
-                        </div>
-                        <div className="bg-slate-50 rounded-xl p-4 shadow-sm border border-slate-100">
-                            <p className="text-slate-400 text-xs uppercase font-bold">Presupuesto</p>
-                            <div className="text-2xl font-bold text-slate-700 mt-1">{curr === 'EUR' ? `€${totalEstimated}` : `${totalEstimated} kr`}</div>
-                        </div>
-                    </div>
-
-                    <div className="w-full bg-slate-200 rounded-full h-4 mb-8 overflow-hidden shadow-inner relative">
-                         <div className="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-500" style={{ width: `${percentage}%` }}></div>
-                    </div>
-
-                    <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-8">
-                        <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase">Distribución de Costes</h3>
-                        <div className="w-full h-6 flex rounded-full overflow-hidden mb-2">
-                            <div style={{width:`${wTransport}%`}} className="bg-blue-600 h-full"></div>
-                            <div style={{width:`${wSightseeing}%`}} className="bg-purple-500 h-full"></div>
-                            <div style={{width:`${wFood}%`}} className="bg-orange-500 h-full"></div>
-                        </div>
-                        <div className="flex text-xs text-gray-500 space-x-4">
-                            <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-blue-600 mr-1"></div>Transporte</div>
-                            <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-purple-500 mr-1"></div>Actividades</div>
-                            <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-orange-500 mr-1"></div>Comida</div>
+                    {/* Big Stats Card */}
+                    <div className="bg-gradient-to-r from-fjord-600 to-fjord-800 rounded-2xl p-6 text-white shadow-xl mb-6 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10"><Wallet size={100}/></div>
+                        <div className="relative z-10">
+                            <p className="text-fjord-200 text-xs font-bold uppercase tracking-wider mb-1">Gasto Realizado</p>
+                            <div className="text-4xl font-bold mb-2">
+                                {currency === 'EUR' ? '€' : ''}{stats.current.toFixed(0)}{currency === 'NOK' ? ' kr' : ''}
+                            </div>
+                            <div className="w-full bg-black/20 h-2 rounded-full mb-2">
+                                <div className="bg-emerald-400 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, (stats.current / stats.total) * 100)}%` }}></div>
+                            </div>
+                            <div className="flex justify-between text-xs text-fjord-100 font-medium">
+                                <span>Total: {stats.total.toFixed(0)}</span>
+                                <span>Restante: {stats.pending.toFixed(0)}</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-sm border border-slate-200 mb-8">
-                        <h3 className="px-4 py-3 border-b font-bold text-gray-700 bg-slate-50">Lista (Toca para marcar)</h3>
-                        {paid.map(a => (
-                            <div key={a.id} className="flex justify-between items-center p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => onToggleComplete(a.id)}>
-                                <div className="flex items-center flex-1">
-                                    <div className={`mr-3 rounded-full transition-colors ${a.completed ? 'text-emerald-500' : 'text-slate-300'}`}>
-                                        {a.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+                    {/* Interactive List */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        {itinerary.filter(i => i.priceEUR > 0).map((item) => (
+                            <div 
+                                key={item.id} 
+                                onClick={() => togglePaid(item.id)}
+                                className="flex items-center justify-between p-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 cursor-pointer transition-colors"
+                            >
+                                <div className="flex items-center">
+                                    <div className={`w-5 h-5 rounded border mr-3 flex items-center justify-center transition-colors ${paidItems.includes(item.id) ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300 bg-white'}`}>
+                                        {paidItems.includes(item.id) && <CheckCircle2 size={14} className="text-white" />}
                                     </div>
                                     <div>
-                                        <p className={`text-sm font-medium ${a.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{a.title}</p>
+                                        <p className={`font-medium ${paidItems.includes(item.id) ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{item.title}</p>
+                                        <p className="text-xs text-slate-400 capitalize">{item.type}</p>
                                     </div>
                                 </div>
-                                <div className={`font-bold ml-4 ${a.completed ? 'text-emerald-600' : 'text-gray-700'}`}>
-                                    {curr === 'EUR' ? `€${a.priceEUR}` : `${a.priceNOK} kr`}
+                                <div className={`font-bold font-mono ${paidItems.includes(item.id) ? 'text-slate-400' : 'text-fjord-600'}`}>
+                                    {currency === 'EUR' ? `€${item.priceEUR}` : `${item.priceNOK} kr`}
                                 </div>
                             </div>
                         ))}
@@ -644,237 +615,323 @@
         const Guide = ({ userLocation }) => {
             const [playing, setPlaying] = useState(null);
             const [weather, setWeather] = useState(null);
-            const [hourly, setHourly] = useState([]);
+            const [forecast, setForecast] = useState([]);
+            const [astronomy, setAstronomy] = useState(null);
+            const [showCamera, setShowCamera] = useState(false);
 
+            // Fetch Weather & Solar Data
             useEffect(() => {
-                fetch('https://api.open-meteo.com/v1/forecast?latitude=60.86&longitude=7.11&current_weather=true&hourly=temperature_2m,weathercode,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weathercode,sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=5')
+                // Weather
+                fetch('https://api.open-meteo.com/v1/forecast?latitude=60.86&longitude=7.11&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FBerlin&forecast_days=5')
                     .then(res => res.json())
                     .then(data => {
                         setWeather(data);
-                        if(data.hourly) {
-                            const times = data.hourly.time;
-                            const temps = data.hourly.temperature_2m;
-                            const codes = data.hourly.weathercode;
-                            const probs = data.hourly.precipitation_probability;
-                            const details = times.map((t, i) => ({ hour: new Date(t).getHours(), temp: temps[i], code: codes[i], prob: probs[i] })).filter(h => h.hour >= 7 && h.hour <= 18);
-                            setHourly(details);
+                        // Process 5-day forecast
+                        if(data.daily) {
+                            const days = data.daily.time.map((t, i) => ({
+                                date: t,
+                                max: data.daily.temperature_2m_max[i],
+                                min: data.daily.temperature_2m_min[i],
+                                code: data.daily.weather_code[i]
+                            }));
+                            setForecast(days);
                         }
                     })
-                    .catch(e => console.error(e));
+                    .catch(e => console.log('Weather offline'));
+
+                // Solar/Astronomy (Using sunrise-sunset.org or similar, or Open-Meteo daily)
+                fetch('https://api.open-meteo.com/v1/forecast?latitude=60.86&longitude=7.11&daily=sunrise,sunset,daylight_duration&timezone=Europe%2FBerlin&forecast_days=1')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.daily) {
+                            setAstronomy({
+                                sunrise: data.daily.sunrise[0], // ISO String
+                                sunset: data.daily.sunset[0],   // ISO String
+                                duration: (data.daily.daylight_duration[0] / 3600).toFixed(1)
+                            });
+                        }
+                    })
+                    .catch(e => console.log("Astronomy offline"));
             }, []);
 
-            const playAudio = (word) => {
-                setPlaying(word);
+            const playAudio = (text) => {
                 if ('speechSynthesis' in window) {
-                    const u = new SpeechSynthesisUtterance(word);
-                    u.lang = 'no-NO';
-                    u.rate = 0.8;
-                    window.speechSynthesis.speak(u);
-                    u.onend = () => setPlaying(null);
-                } else { setTimeout(() => setPlaying(null), 1000); }
-            };
-
-            const getWeatherIcon = (code, size=24) => {
-                if(code <= 3) return <CloudSun size={size} className="text-orange-400" />;
-                if(code >= 45 && code <= 48) return <Wind size={size} className="text-slate-400" />;
-                if(code >= 71) return <CloudSnow size={size} className="text-blue-300" />;
-                if(code >= 51) return <CloudRain size={size} className="text-blue-500" />;
-                return <Droplets size={size} className="text-blue-400" />;
-            };
-
-            const handleEmergency = () => {
-                if (userLocation) shareLocation(userLocation.lat, userLocation.lng);
-                else {
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => shareLocation(pos.coords.latitude, pos.coords.longitude),
-                        () => alert("⚠️ No se pudo obtener ubicación GPS.")
-                    );
+                    setPlaying(text);
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'no-NO'; // Norwegian
+                    utterance.rate = 0.9;
+                    utterance.onend = () => setPlaying(null);
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    alert("Tu navegador no soporta audio.");
                 }
             };
 
-            const shareLocation = (lat, lng) => {
-                const url = `https://wa.me/?text=${encodeURIComponent(`🆘 SOS! Mi ubicación en Flåm: https://maps.google.com/?q=${lat},${lng}`)}`;
-                window.open(url, '_blank');
+            const getWeatherIcon = (code) => {
+                if (code <= 3) return <Sun className="text-yellow-500" />;
+                if (code <= 60) return <CloudRain className="text-blue-400" />;
+                return <CloudSnow className="text-gray-400" />;
+            };
+
+            const handleSOS = () => {
+                if (!userLocation) {
+                    alert("Necesitamos tu ubicación primero. Asegúrate de tener el GPS activo.");
+                    return;
+                }
+                const text = `🆘 SOS! Necesito ayuda. Mi ubicación actual en Flåm es: https://maps.google.com/?q=${userLocation.lat},${userLocation.lng}`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+            };
+
+            const openTranslator = () => {
+                // Google Translate Camera Mode
+                window.open('https://translate.google.com/?sl=no&tl=es&op=images', '_blank');
+            };
+            
+            const openMSCApp = () => {
+                // Try to open Play Store page which will offer "Open" if installed
+                window.open('https://play.google.com/store/apps/details?id=com.msccruises.mscforme', '_blank');
+            };
+
+            // Solar Chart Helper
+            const renderSolarChart = () => {
+                if (!astronomy) return <div className="text-xs text-slate-400">Cargando datos solares...</div>;
+
+                const now = new Date();
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                const totalMinutes = 24 * 60;
+                const nowPercent = (currentMinutes / totalMinutes) * 100;
+
+                const sunriseDate = new Date(astronomy.sunrise);
+                const sunsetDate = new Date(astronomy.sunset);
+                
+                const sunriseMins = sunriseDate.getHours() * 60 + sunriseDate.getMinutes();
+                const sunsetMins = sunsetDate.getHours() * 60 + sunsetDate.getMinutes();
+                
+                const sunrisePercent = (sunriseMins / totalMinutes) * 100;
+                const sunsetPercent = (sunsetMins / totalMinutes) * 100;
+
+                const sunriseStr = `${String(sunriseDate.getHours()).padStart(2,'0')}:${String(sunriseDate.getMinutes()).padStart(2,'0')}`;
+                const sunsetStr = `${String(sunsetDate.getHours()).padStart(2,'0')}:${String(sunsetDate.getMinutes()).padStart(2,'0')}`;
+
+                return (
+                    <div className="mt-4 bg-slate-900 rounded-xl p-4 text-white relative overflow-hidden shadow-inner">
+                        <div className="flex justify-between text-xs text-slate-400 mb-6 font-mono">
+                            <span>00:00</span>
+                            <span>12:00</span>
+                            <span>23:59</span>
+                        </div>
+                        
+                        {/* The Bar Container */}
+                        <div className="relative h-12 w-full rounded-full bg-slate-800 overflow-hidden border border-slate-700">
+                            {/* Day Segment (Blue) */}
+                            <div 
+                                className="absolute top-0 bottom-0 bg-sky-400"
+                                style={{ 
+                                    left: `${sunrisePercent}%`, 
+                                    width: `${sunsetPercent - sunrisePercent}%` 
+                                }}
+                            ></div>
+
+                            {/* Sunrise Gradient Overlay */}
+                            <div 
+                                className="absolute top-0 bottom-0 w-8 -ml-4 bg-gradient-to-r from-slate-800 via-orange-400 to-sky-400 opacity-90"
+                                style={{ left: `${sunrisePercent}%` }}
+                            ></div>
+
+                            {/* Sunset Gradient Overlay */}
+                            <div 
+                                className="absolute top-0 bottom-0 w-8 -ml-4 bg-gradient-to-r from-sky-400 via-orange-500 to-slate-800 opacity-90"
+                                style={{ left: `${sunsetPercent}%` }}
+                            ></div>
+                            
+                            {/* NOW Indicator */}
+                            <div 
+                                className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10 shadow-[0_0_10px_rgba(239,68,68,0.8)]"
+                                style={{ left: `${nowPercent}%` }}
+                            >
+                                <div className="absolute -top-1 -left-[3px] w-2 h-2 bg-red-500 rounded-full"></div>
+                                <div className="absolute top-1/2 -left-6 bg-red-600 text-white text-[9px] font-bold px-1 rounded transform -translate-y-1/2">AHORA</div>
+                            </div>
+                        </div>
+
+                        {/* Labels positioned absolutely */}
+                        <div className="relative h-6 mt-1 w-full text-[10px] font-bold">
+                            <div 
+                                className="absolute transform -translate-x-1/2 flex flex-col items-center text-yellow-400"
+                                style={{ left: `${sunrisePercent}%` }}
+                            >
+                                <ArrowRight size={10} className="-rotate-90 mb-0.5"/>
+                                <span>{sunriseStr}</span>
+                            </div>
+                            <div 
+                                className="absolute transform -translate-x-1/2 flex flex-col items-center text-orange-400"
+                                style={{ left: `${sunsetPercent}%` }}
+                            >
+                                <ArrowRight size={10} className="-rotate-90 mb-0.5"/>
+                                <span>{sunsetStr}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="mt-4 flex items-center justify-between text-xs text-slate-300 bg-white/5 p-2 rounded">
+                            <div className="flex items-center"><Sunrise size={14} className="text-yellow-400 mr-2"/> Amanecer</div>
+                            <div className="font-mono">{astronomy.duration}h Luz</div>
+                            <div className="flex items-center">Atardecer <Sunset size={14} className="text-orange-500 ml-2"/></div>
+                        </div>
+                    </div>
+                );
             };
 
             return (
                 <div className="pb-24 px-4 pt-6 max-w-lg mx-auto h-full overflow-y-auto">
-                    <h2 className="text-2xl font-bold text-fjord-500 mb-6">Guía y Consejos</h2>
                     
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                        <div className="bg-red-600 text-white rounded-xl p-4 shadow-lg flex flex-col items-center text-center border-2 border-red-400 animate-pulse cursor-pointer" onClick={handleEmergency}>
-                            <AlertTriangle size={24} className="text-white mb-1" />
-                            <h3 className="text-sm font-bold">EMERGENCIA SOS</h3>
-                            <span className="text-[10px] mt-1 bg-white/20 px-2 rounded">Enviar Ubicación</span>
-                        </div>
+                    {/* SOS & Apps Buttons */}
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                        <button 
+                            onClick={handleSOS}
+                            className="bg-red-600 text-white p-4 rounded-xl shadow-lg flex flex-col items-center justify-center active:scale-95 transition-transform animate-pulse-slow"
+                        >
+                            <AlertTriangle size={32} className="mb-2" />
+                            <span className="font-bold text-sm">SOS EMERGENCIA</span>
+                            <span className="text-[10px] opacity-80 mt-1">Enviar Ubicación</span>
+                        </button>
                         
-                        <a href="https://play.google.com/store/apps/details?id=com.msccruises.mscforme" target="_blank" rel="noopener noreferrer" className="bg-blue-900 text-white rounded-xl p-4 shadow-lg flex flex-col items-center text-center border border-blue-700 hover:bg-blue-800 transition-colors">
-                            <Smartphone size={24} className="text-white mb-1" />
-                            <h3 className="text-sm font-bold">App MSC for Me</h3>
-                            <span className="text-[10px] mt-1 bg-white/20 px-2 rounded">Abrir Aplicación</span>
-                        </a>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-5 rounded-xl shadow-lg mb-6">
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <h3 className="text-blue-100 text-sm font-bold uppercase mb-1">Clima (Ahora)</h3>
-                                {weather ? <div className="text-4xl font-bold">{Math.round(weather.current_weather.temperature)}°C</div> : <div className="text-xl">Cargando...</div>}
-                            </div>
-                            {weather && getWeatherIcon(weather.current_weather.weathercode, 48)}
+                        <div className="flex flex-col gap-2">
+                             <button 
+                                onClick={openMSCApp}
+                                className="flex-1 bg-blue-900 text-white p-2 rounded-xl shadow flex items-center justify-center active:scale-95"
+                            >
+                                <Anchor size={20} className="mr-2" />
+                                <span className="text-xs font-bold">App MSC</span>
+                            </button>
+                            <button 
+                                onClick={openTranslator}
+                                className="flex-1 bg-indigo-600 text-white p-2 rounded-xl shadow flex items-center justify-center active:scale-95"
+                            >
+                                <Camera size={20} className="mr-2" />
+                                <span className="text-xs font-bold">Traductor Visual</span>
+                            </button>
                         </div>
                     </div>
 
-                    {weather && weather.daily && weather.daily.sunrise && (
-                        <div className="bg-white rounded-xl shadow border border-slate-100 p-4 mb-6 flex justify-between items-center">
-                            <div className="flex flex-col items-center w-1/3 border-r border-slate-100">
-                                <span className="text-xs text-slate-400 uppercase font-bold mb-1">Amanecer</span>
-                                <div className="flex items-center text-amber-500">
-                                    <Sunrise size={20} className="mr-1" />
-                                    <span className="font-bold text-lg">
-                                        {new Date(weather.daily.sunrise[0]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="flex flex-col items-center w-1/3 border-r border-slate-100">
-                                <span className="text-xs text-slate-400 uppercase font-bold mb-1">Luz Total</span>
-                                <span className="font-bold text-slate-600 text-lg">
-                                    {(() => {
-                                        const s = new Date(weather.daily.sunrise[0]);
-                                        const e = new Date(weather.daily.sunset[0]);
-                                        const diff = (e - s) / (1000 * 60 * 60);
-                                        return Math.floor(diff) + 'h ' + Math.round((diff % 1) * 60) + 'm';
-                                    })()}
-                                </span>
-                            </div>
-                            <div className="flex flex-col items-center w-1/3">
-                                <span className="text-xs text-slate-400 uppercase font-bold mb-1">Anochecer</span>
-                                <div className="flex items-center text-indigo-500">
-                                    <Sunset size={20} className="mr-1" />
-                                    <span className="font-bold text-lg">
-                                        {new Date(weather.daily.sunset[0]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    <h2 className="text-2xl font-bold text-fjord-500 mb-4">Guía Local</h2>
 
-                    {hourly.length > 0 && (
-                        <div className="mb-8">
-                             <h3 className="font-bold text-gray-700 mb-3 text-sm uppercase flex items-center"><Clock size={16} className="mr-2"/> Escala Hora a Hora</h3>
-                             <div className="flex overflow-x-auto pb-4 space-x-3 hide-scrollbar">
-                                 {hourly.map(h => (
-                                     <div key={h.hour} className="flex flex-col items-center bg-white p-3 rounded-lg border border-slate-100 min-w-[70px] shadow-sm">
-                                         <span className="text-xs font-bold text-gray-500 mb-1">{h.hour}:00</span>
-                                         <div className="my-1">{getWeatherIcon(h.code, 24)}</div>
-                                         <span className="font-bold text-fjord-600">{Math.round(h.temp)}°</span>
-                                     </div>
-                                 ))}
-                             </div>
-                        </div>
-                    )}
+                    {/* Solar Chart */}
+                    <div className="mb-8">
+                        <h3 className="font-bold text-slate-700 mb-2 flex items-center"><Sun size={18} className="mr-2 text-orange-500"/> Ciclo Solar Hoy</h3>
+                        {renderSolarChart()}
+                    </div>
 
-                    {weather && weather.daily && (
-                        <div className="bg-white rounded-xl shadow border border-slate-100 p-4 mb-8">
-                             <h3 className="font-bold text-gray-700 mb-3 text-sm uppercase flex items-center"><CalendarClock size={16} className="mr-2"/> Pronóstico 5 Días</h3>
-                             <div className="space-y-3">
-                                {weather.daily.time.slice(0, 5).map((day, i) => (
-                                    <div key={day} className="flex justify-between items-center text-sm border-b border-gray-50 last:border-0 pb-2">
-                                        <span className="font-bold text-gray-600 capitalize w-20">{new Date(day).toLocaleDateString('es-ES', {weekday:'short', day:'numeric'})}</span>
-                                        <div className="flex items-center space-x-3">
-                                            {getWeatherIcon(weather.daily.weathercode[i])}
-                                            <span className="font-medium">
-                                                <span className="text-blue-500">{Math.round(weather.daily.temperature_2m_min[i])}°</span> / <span className="text-red-500">{Math.round(weather.daily.temperature_2m_max[i])}°</span>
-                                            </span>
+                    {/* Weather Forecast */}
+                    <div className="mb-8">
+                         <h3 className="font-bold text-slate-700 mb-4 flex items-center"><CloudSun size={18} className="mr-2 text-blue-500"/> Pronóstico 5 Días</h3>
+                         <div className="bg-white rounded-xl shadow-sm border border-slate-200 divide-y divide-slate-100">
+                            {forecast.length > 0 ? forecast.map((day, i) => {
+                                const date = new Date(day.date);
+                                const dayName = date.toLocaleDateString('es-ES', { weekday: 'long' });
+                                return (
+                                    <div key={day.date} className="p-3 flex justify-between items-center">
+                                        <span className="capitalize w-24 font-medium text-slate-700">{i===0 ? 'Hoy' : dayName}</span>
+                                        <div className="flex items-center">
+                                            {getWeatherIcon(day.code)}
+                                            <span className="ml-2 text-sm text-slate-500">{day.code <= 3 ? 'Soleado' : 'Nublado'}</span>
+                                        </div>
+                                        <div className="text-sm font-mono font-bold text-slate-800">
+                                            {Math.round(day.max)}° <span className="text-slate-400">/ {Math.round(day.min)}°</span>
                                         </div>
                                     </div>
-                                ))}
-                             </div>
-                        </div>
-                    )}
-
-                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white shadow-lg mb-8 relative overflow-hidden">
-                        <h3 className="text-indigo-100 text-sm font-bold uppercase mb-2 flex items-center"><Languages size={18} className="mr-2"/> Traductor Visual</h3>
-                        <a href="https://translate.google.com/?sl=no&tl=es&op=images" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full py-3 bg-white text-indigo-700 rounded-lg font-bold shadow mt-2">
-                            <Camera size={20} className="mr-2" /> Activar Cámara
-                        </a>
+                                )
+                            }) : <div className="p-4 text-center text-slate-400">Cargando clima...</div>}
+                         </div>
                     </div>
                     
-                    <h3 className="text-lg font-bold text-gray-800 mb-4">Pronunciación</h3>
-                    <div className="bg-white rounded-lg shadow border border-gray-200">
-                        {PRONUNCIATIONS.map((item, i) => (
-                            <div key={item.word} className="p-4 flex justify-between items-center border-b last:border-0 border-gray-100">
-                                <div>
-                                    <div className="flex items-baseline space-x-2">
-                                        <span className="font-bold text-lg text-fjord-600">{item.word}</span>
-                                        <span className="text-xs text-gray-400 font-mono">{item.phonetic}</span>
-                                    </div>
-                                    <div className="text-sm text-gray-700">"{item.simplified}"</div>
+                    {/* Pronunciation */}
+                    <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center"><Volume2 size={18} className="mr-2"/> Diccionario Exprés</h3>
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+                        {PRONUNCIATIONS.map((item, idx) => (
+                        <div key={item.word} className={`p-4 flex justify-between items-center ${idx !== PRONUNCIATIONS.length - 1 ? 'border-b border-slate-50' : ''}`}>
+                            <div>
+                                <div className="flex items-baseline space-x-2">
+                                    <span className="font-bold text-lg text-fjord-700">{item.word}</span>
+                                    <span className="text-xs text-slate-400 font-mono bg-slate-100 px-1 rounded">{item.simplified}</span>
                                 </div>
-                                <button onClick={() => playAudio(item.word)} className={`p-3 rounded-full ${playing===item.word?'bg-emerald-100 text-emerald-600':'bg-slate-100 text-slate-500'}`}>
-                                    <Volume2 size={20} />
-                                </button>
+                                <p className="text-xs text-slate-500 mt-1 italic">{item.meaning}</p>
                             </div>
+                            <button 
+                                onClick={() => playAudio(item.word)}
+                                className={`p-3 rounded-full transition-colors ${playing === item.word ? 'bg-emerald-100 text-emerald-600 scale-110' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+                            >
+                            <Volume2 size={20} />
+                            </button>
+                        </div>
                         ))}
                     </div>
-                    <div className="mt-8 text-center text-xs text-slate-400 pb-4">
-                        <div>Actualizado el {UPDATE_DATE}</div>
-                        <div className="mt-1 font-medium text-slate-500">© 2025 - 2026 Gonzalo Arenas de la Hoz</div>
+
+                     {/* Footer */}
+                     <div className="text-center py-8 text-slate-400 text-xs">
+                        <p className="font-medium">Flåm Guide 2026</p>
+                        <p>Actualizado el {UPDATE_DATE}</p>
+                        <p className="mt-1">© 2025 - 2026 Gonzalo Arenas de la Hoz</p>
                     </div>
                 </div>
             );
         };
 
         const MapComponent = ({ activities, userLocation, focusedLocation }) => {
-            const mapRef = useRef(null);
-            const mapInstance = useRef(null);
+            const mapContainerRef = useRef(null);
+            const mapInstanceRef = useRef(null);
             const layersRef = useRef([]);
 
             useEffect(() => {
-                if(!mapRef.current || mapInstance.current) return;
-                // Use global L
-                const map = L.map(mapRef.current).setView([60.8638, 7.1187], 13);
+                if (!mapContainerRef.current || mapInstanceRef.current) return;
+                const map = L.map(mapContainerRef.current).setView([60.8638, 7.1187], 13);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
-                mapInstance.current = map;
-                
-                delete L.Icon.Default.prototype._getIconUrl;
-                L.Icon.Default.mergeOptions({
-                    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-                    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-                    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-                });
-                return () => { map.remove(); mapInstance.current = null; };
+                mapInstanceRef.current = map;
+                return () => { map.remove(); mapInstanceRef.current = null; };
             }, []);
 
             useEffect(() => {
-                const map = mapInstance.current;
-                if(!map) return;
+                const map = mapInstanceRef.current;
+                if (!map) return;
+                
                 layersRef.current.forEach(l => l.remove());
                 layersRef.current = [];
 
-                const endIcon = L.divIcon({ className: 'end-marker', html: '<div style="background:#3A7D44;width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 0 5px rgba(0,0,0,0.5);"></div>', iconSize: [12,12] });
+                // Custom Icons
+                const createIcon = (color) => L.divIcon({
+                    className: 'custom-pin',
+                    html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; box-shadow: 2px 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><div style="width: 8px; height: 8px; background: white; border-radius: 50%; transform: rotate(45deg);"></div></div>`,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 24],
+                    popupAnchor: [0, -24]
+                });
 
                 activities.forEach(act => {
-                    layersRef.current.push(L.marker([act.coords.lat, act.coords.lng]).addTo(map).bindPopup(act.title));
-                    if(act.endCoords) {
-                        layersRef.current.push(L.marker([act.endCoords.lat, act.endCoords.lng], {icon: endIcon}).addTo(map).bindPopup('Fin: ' + act.title));
-                        layersRef.current.push(L.polyline([[act.coords.lat, act.coords.lng], [act.endCoords.lat, act.endCoords.lng]], {color: '#2A5B87', weight: 3, dashArray: '5,10'}).addTo(map));
+                    const marker = L.marker([act.coords.lat, act.coords.lng], { icon: createIcon('#2A5B87') })
+                        .addTo(map).bindPopup(`<b>${act.title}</b><br/>${act.locationName}`);
+                    layersRef.current.push(marker);
+
+                    if (act.endCoords) {
+                         const endMarker = L.marker([act.endCoords.lat, act.endCoords.lng], { icon: createIcon('#3A7D44') })
+                            .addTo(map).bindPopup(`<b>Fin: ${act.title}</b>`);
+                        layersRef.current.push(endMarker);
+                        const polyline = L.polyline([[act.coords.lat, act.coords.lng], [act.endCoords.lat, act.endCoords.lng]], { color: '#2A5B87', weight: 4, opacity: 0.6, dashArray: '10, 10' }).addTo(map);
+                        layersRef.current.push(polyline);
                     }
                 });
 
-                if(userLocation) {
-                    const uIcon = L.divIcon({ className: 'user', html: '<div style="background:#3b82f6;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 10px rgba(0,0,0,0.3);"></div>', iconSize: [16,16] });
-                    layersRef.current.push(L.marker([userLocation.lat, userLocation.lng], {icon: uIcon}).addTo(map));
+                if (userLocation) {
+                    const userMarker = L.circleMarker([userLocation.lat, userLocation.lng], { radius: 8, fillColor: '#3b82f6', color: '#fff', weight: 3, fillOpacity: 1 }).addTo(map);
+                    layersRef.current.push(userMarker);
                 }
             }, [activities, userLocation]);
 
             useEffect(() => {
-                if(focusedLocation && mapInstance.current) {
-                    mapInstance.current.flyTo([focusedLocation.lat, focusedLocation.lng], 18);
+                if(mapInstanceRef.current && focusedLocation) {
+                    mapInstanceRef.current.setView([focusedLocation.lat, focusedLocation.lng], 18, { animate: true, duration: 1.5 });
                 }
             }, [focusedLocation]);
 
-            return <div ref={mapRef} style={{width:'100%', height:'100%'}} />;
+            return <div ref={mapContainerRef} className="w-full h-full bg-slate-100" />;
         };
 
         const App = () => {
@@ -882,78 +939,79 @@
             const [activeTab, setActiveTab] = useState('timeline');
             const [userLocation, setUserLocation] = useState(null);
             const [mapFocus, setMapFocus] = useState(null);
+            const [selectedActivity, setSelectedActivity] = useState(null);
             const [countdown, setCountdown] = useState('');
 
             useEffect(() => {
-                const s = localStorage.getItem('flam_v1');
-                if(s) {
-                    const p = JSON.parse(s);
-                    setItinerary(INITIAL_ITINERARY.map(i => {
-                        const saved = p.find(x => x.id === i.id);
-                        return saved ? {...i, completed: saved.completed} : i;
-                    }));
+                if ('geolocation' in navigator) {
+                    const id = navigator.geolocation.watchPosition(
+                        p => setUserLocation({ lat: p.coords.latitude, lng: p.coords.longitude }),
+                        e => console.warn(e),
+                        { enableHighAccuracy: true }
+                    );
+                    return () => navigator.geolocation.clearWatch(id);
                 }
             }, []);
 
-            const toggle = (id) => {
-                const n = itinerary.map(a => a.id === id ? {...a, completed: !a.completed} : a);
-                setItinerary(n);
-                localStorage.setItem('flam_v1', JSON.stringify(n));
-            };
-
-            const locate = (c, ec) => { setMapFocus(c); setActiveTab('map'); };
-
             useEffect(() => {
-                const t = setInterval(() => {
+                const interval = setInterval(() => {
                     const now = new Date();
-                    const [h,m] = SHIP_DEPARTURE_TIME.split(':').map(Number);
-                    const d = new Date(); d.setHours(h,m,0);
-                    const diff = d - now;
-                    if(diff <= 0) setCountdown("ZARPANDO");
+                    const [h, m] = SHIP_DEPARTURE_TIME.split(':').map(Number);
+                    const target = new Date(); target.setHours(h, m, 0, 0);
+                    const diff = target - now;
+                    if (diff <= 0) setCountdown("¡ZARPANDO!");
                     else {
-                        const hr = Math.floor(diff/3600000);
-                        const mn = Math.floor((diff%3600000)/60000);
-                        const sc = Math.floor((diff%60000)/1000);
+                        const hr = Math.floor(diff/(1000*60*60));
+                        const mn = Math.floor((diff%(1000*60*60))/(1000*60));
+                        const sc = Math.floor((diff%(1000*60))/1000);
                         setCountdown(`${hr}h ${mn}m ${sc}s`);
                     }
                 }, 1000);
-                return () => clearInterval(t);
+                return () => clearInterval(interval);
             }, []);
 
-            useEffect(() => {
-                if('geolocation' in navigator) {
-                    navigator.geolocation.watchPosition(p => setUserLocation({lat:p.coords.latitude, lng:p.coords.longitude}), null, {enableHighAccuracy:true});
-                }
-            }, []);
+            const handleToggleComplete = (id) => {
+                setItinerary(prev => prev.map(a => a.id === id ? { ...a, completed: !a.completed } : a));
+            };
+
+            const handleLocate = (c1, c2) => {
+                setMapFocus(c1);
+                setActiveTab('map');
+            };
 
             return (
-                <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
-                    <header className="bg-fjord-900 text-white p-3 shadow-md z-20 flex justify-between items-center">
+                <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden select-none">
+                    <header className="bg-fjord-900 text-white p-3 shadow-md z-20 flex justify-between items-center shrink-0">
                         <div className="flex items-center">
                             <Anchor className="mr-2 text-sunset-500" size={20} />
-                            <div><h1 className="font-bold text-sm leading-none">Salida: {SHIP_DEPARTURE_TIME}</h1><p className="text-xs text-fjord-200">Todos a bordo {ONBOARD_TIME}</p></div>
+                            <div>
+                                <h1 className="font-bold text-sm leading-none">Salida: {SHIP_DEPARTURE_TIME}</h1>
+                                <p className="text-[10px] text-fjord-200">Todos a bordo {ONBOARD_TIME}</p>
+                            </div>
                         </div>
-                        <div className="text-xl font-mono font-bold text-sunset-500 tabular-nums">{countdown}</div>
+                        <div className="text-right font-mono font-bold text-lg text-sunset-500">{countdown}</div>
                     </header>
 
                     <main className="flex-1 overflow-hidden relative">
-                        {activeTab === 'timeline' && <div className="h-full overflow-y-auto"><Timeline itinerary={itinerary} onToggleComplete={toggle} onLocate={locate} userLocation={userLocation} /></div>}
-                        {activeTab === 'map' && <div className="h-full w-full"><MapComponent activities={itinerary} userLocation={userLocation} focusedLocation={mapFocus} /></div>}
-                        {activeTab === 'budget' && <Budget itinerary={itinerary} onToggleComplete={toggle} />}
+                        {activeTab === 'timeline' && <div className="h-full overflow-y-auto"><Timeline itinerary={itinerary} onToggleComplete={handleToggleComplete} onLocate={handleLocate} userLocation={userLocation} onSelectActivity={setSelectedActivity} /></div>}
+                        {activeTab === 'map' && <MapComponent activities={itinerary} userLocation={userLocation} focusedLocation={mapFocus} />}
+                        {activeTab === 'budget' && <Budget itinerary={itinerary} />}
                         {activeTab === 'guide' && <Guide userLocation={userLocation} />}
                     </main>
 
-                    <nav className="bg-white border-t border-slate-200 shadow-lg z-30 pb-2">
+                    {selectedActivity && <ActivityDetailModal activity={selectedActivity} onClose={() => setSelectedActivity(null)} />}
+
+                    <nav className="bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-30 pb-safe shrink-0">
                         <div className="flex justify-around items-center h-16">
                             {[
-                                {id:'timeline', icon:CalendarClock, l:'Itinerario'},
-                                {id:'map', icon:MapIcon, l:'Mapa'},
-                                {id:'budget', icon:Wallet, l:'Gastos'},
-                                {id:'guide', icon:BookOpen, l:'Guía'}
-                            ].map(x => (
-                                <button key={x.id} onClick={() => setActiveTab(x.id)} className={`flex flex-col items-center w-full justify-center ${activeTab===x.id?'text-fjord-600':'text-slate-400'}`}>
-                                    <x.icon size={24} />
-                                    <span className="text-[10px] mt-1 font-medium">{x.l}</span>
+                                { id: 'timeline', icon: CalendarClock, label: 'Itinerario' },
+                                { id: 'map', icon: MapIcon, label: 'Mapa' },
+                                { id: 'budget', icon: Wallet, label: 'Gastos' },
+                                { id: 'guide', icon: BookOpen, label: 'Guía' }
+                            ].map(tab => (
+                                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex flex-col items-center w-full h-full justify-center transition-colors ${activeTab === tab.id ? 'text-fjord-600' : 'text-slate-300'}`}>
+                                    <tab.icon size={24} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+                                    <span className="text-[10px] mt-1 font-bold">{tab.label}</span>
                                 </button>
                             ))}
                         </div>
@@ -964,14 +1022,6 @@
 
         const root = createRoot(document.getElementById('root'));
         root.render(<App />);
-    </script>
-    
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./service-worker.js').catch(err => console.log('Error SW:', err));
-        });
-      }
     </script>
 </body>
 </html>
