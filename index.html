@@ -29,13 +29,13 @@
       }
     </script>
     
-    <!-- Leaflet Map CSS -->
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
     
-    <!-- Babel para compilar React en el navegador -->
+    <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <!-- Import Map LIMPIO -->
@@ -45,32 +45,29 @@
     "react": "https://esm.sh/react@18.2.0",
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
     "lucide-react": "https://esm.sh/lucide-react@0.263.1",
-    "leaflet": "https://aistudiocdn.com/leaflet@^1.9.4",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "recharts": "https://aistudiocdn.com/recharts@^3.5.1"
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
+    "leaflet": "https://aistudiocdn.com/leaflet@^1.9.4"
   }
 }
 </script>
     
-    <!-- Leaflet Global -->
+    <!-- Leaflet JS Global -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
         body { background-color: #f8fafc; overscroll-behavior-y: none; }
         .leaflet-container { width: 100%; height: 100%; z-index: 0; }
-        /* Hide scrollbar for clean UI */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Modal Animation */
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .modal-content { animation: fadeIn 0.2s ease-out forwards; }
         
-        /* Pulse Animation for Active State */
         @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
         .active-card { animation: pulse-border 2s infinite; }
     </style>
@@ -78,13 +75,12 @@
 <body>
     <div id="root"></div>
 
-    <!-- MAIN APP SCRIPT -->
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, Thermometer, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Sun, CloudRain, CloudSnow, Umbrella, X, Eye, Lightbulb, ChevronRight, Ticket, ChevronDown, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils, Instagram } from 'lucide-react';
+        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Umbrella, X, Eye, Lightbulb, ChevronDown, Ticket, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils, Instagram, CloudRain, CloudSnow, Sun } from 'lucide-react';
 
-        // --- CONSTANTS & DATA ---
+        // --- CONSTANTS ---
         const SHIP_DEPARTURE_TIME = "18:00";
         const ONBOARD_TIME = "17:45";
         const UPDATE_DATE = "04 de diciembre de 2025";
@@ -233,6 +229,16 @@
             return `${(meters / 1000).toFixed(1)} km`;
         };
 
+        const calculateDuration = (start, end) => {
+            const [sh, sm] = start.split(':').map(Number);
+            const [eh, em] = end.split(':').map(Number);
+            let diff = (eh*60+em) - (sh*60+sm);
+            if(diff < 0) diff += 24*60;
+            const h = Math.floor(diff/60);
+            const m = diff%60;
+            return h > 0 && m > 0 ? `${h}h ${m}m` : (h > 0 ? `${h}h` : `${m} min`);
+        };
+
         const formatTimeRemaining = (targetTimeStr) => {
             const now = new Date();
             const [h, m] = targetTimeStr.split(':').map(Number);
@@ -244,25 +250,13 @@
             return dh > 0 ? `${dh}h ${dm}m` : `${dm}m`;
         };
 
-        const calculateDuration = (start, end) => {
-            const [sh, sm] = start.split(':').map(Number);
-            const [eh, em] = end.split(':').map(Number);
-            let diff = (eh*60+em) - (sh*60+sm);
-            if(diff < 0) diff += 24*60;
-            const h = Math.floor(diff/60);
-            const m = diff%60;
-            return h > 0 && m > 0 ? `${h}h ${m}m` : (h > 0 ? `${h}h` : `${m} min`);
-        };
-
-        // --- MODAL COMPONENT ---
+        // --- COMPONENTS ---
         const ActivityDetailModal = ({ activity, onClose }) => {
             if (!activity) return null;
 
             return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
                     <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden modal-content relative flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
-                        
-                        {/* Header */}
                         <div className="bg-fjord-600 p-4 text-white relative">
                             <button onClick={onClose} className="absolute top-4 right-4 p-1 bg-white/20 rounded-full hover:bg-white/30">
                                 <X size={20} />
@@ -274,10 +268,7 @@
                             </div>
                         </div>
 
-                        {/* Content Scrollable */}
                         <div className="p-6 overflow-y-auto">
-                            
-                            {/* Section: Qué veremos */}
                             <div className="mb-6">
                                 <h3 className="flex items-center text-fjord-600 font-bold mb-2 uppercase text-sm tracking-wider">
                                     <Eye size={18} className="mr-2" /> Qué veremos
@@ -287,7 +278,6 @@
                                 </p>
                             </div>
 
-                            {/* Section: Tips/Detalle */}
                             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
                                 <h3 className="flex items-center text-amber-700 font-bold mb-2 uppercase text-sm tracking-wider">
                                     <Lightbulb size={18} className="mr-2" /> Claves y Consejos
@@ -297,7 +287,6 @@
                                 </p>
                             </div>
 
-                            {/* Locations */}
                             <div className="flex flex-col space-y-2 text-sm text-gray-500 mb-4">
                                 <div className="flex items-center">
                                     <MapPin size={16} className="text-fjord-500 mr-2" />
@@ -313,7 +302,6 @@
                                 )}
                             </div>
 
-                            {/* Buttons: Ticket & Webcam & Instagram */}
                             <div className="space-y-3 mt-4">
                                 {activity.ticketUrl && (
                                     <a href={activity.ticketUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full py-3 bg-emerald-600 text-white rounded-xl font-bold shadow-md hover:bg-emerald-700 active:scale-95 transition-all">
@@ -321,14 +309,12 @@
                                         Comprar Tickets Online
                                     </a>
                                 )}
-
                                 {activity.webcamUrl && (
                                     <a href={activity.webcamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full py-3 bg-red-50 text-red-600 rounded-xl font-bold border border-red-100 hover:bg-red-100">
                                         <Camera size={18} className="mr-2" />
                                         Ver Webcam en Vivo
                                     </a>
                                 )}
-
                                 {activity.instagramUrl && (
                                     <a href={activity.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full py-3 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white rounded-xl font-bold shadow-md hover:opacity-90 active:scale-95 transition-all">
                                         <Instagram size={20} className="mr-2" />
@@ -338,7 +324,6 @@
                             </div>
                         </div>
 
-                        {/* Footer Button */}
                         <div className="p-4 border-t border-gray-100 bg-gray-50">
                             <button onClick={onClose} className="w-full py-3 bg-fjord-600 text-white rounded-xl font-bold shadow-md active:scale-95 transition-transform">
                                 Cerrar
@@ -349,12 +334,10 @@
             );
         };
 
-        // --- TIMELINE COMPONENT ---
         const Timeline = ({ itinerary, onToggleComplete, onLocate, userLocation }) => {
             const [selectedActivity, setSelectedActivity] = useState(null);
             const [now, setNow] = useState(new Date());
 
-            // Update time every minute
             useEffect(() => {
                 const interval = setInterval(() => setNow(new Date()), 60000);
                 return () => clearInterval(interval);
@@ -375,27 +358,19 @@
                             const duration = calculateDuration(act.startTime, act.endTime);
                             const isCritical = act.notes === 'CRITICAL';
                             const dist = userLocation ? calculateDistance(userLocation, act.coords) : null;
-                            
-                            // Time Calculations
                             const startMins = getMinutes(act.startTime);
                             const endMins = getMinutes(act.endTime);
                             const isActive = currentMinutes >= startMins && currentMinutes < endMins;
-                            
-                            // Calculate Progress if active
                             const totalDurationMins = endMins - startMins;
                             const elapsedMins = currentMinutes - startMins;
                             const progressPercent = isActive ? Math.min(100, Math.max(0, (elapsedMins / totalDurationMins) * 100)) : 0;
 
-                            // Buffer & Now Marker Calculation
                             let bufferElement = null;
                             let nowMarker = null;
 
-                            // LOGIC FOR "NOW" MARKER BETWEEN ACTIVITIES
                             if (index > 0) {
                                 const prev = itinerary[index - 1];
                                 const prevEndMins = getMinutes(prev.endTime);
-                                
-                                // Buffer time logic
                                 const diff = startMins - prevEndMins;
                                 if (diff > 0) {
                                      const h = Math.floor(diff/60);
@@ -414,7 +389,6 @@
                                     bufferElement = <div className="h-6"></div>;
                                 }
 
-                                // "Now" Marker Logic (Gap)
                                 if (currentMinutes > prevEndMins && currentMinutes < startMins) {
                                     nowMarker = (
                                         <div className="ml-6 mb-6 flex items-center animate-pulse">
@@ -428,7 +402,6 @@
                                     );
                                 }
                             } else {
-                                // Before first activity
                                 if (currentMinutes < startMins) {
                                      nowMarker = (
                                         <div className="ml-6 mb-6 flex items-center">
@@ -450,12 +423,10 @@
                                         <div className={`absolute -left-[31px] top-0 rounded-full bg-white border-2 cursor-pointer z-10 transition-colors ${
                                             isActive ? 'border-blue-500 text-blue-500 ring-4 ring-blue-100' :
                                             (act.completed ? 'border-emerald-500 text-emerald-500' : 'border-fjord-500 text-fjord-500')
-                                        }`}
-                                             onClick={(e) => { e.stopPropagation(); onToggleComplete(act.id); }}>
+                                        }`} onClick={(e) => { e.stopPropagation(); onToggleComplete(act.id); }}>
                                             {act.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
                                         </div>
                                         
-                                        {/* Card Container */}
                                         <div 
                                             className={`p-4 rounded-lg border shadow-sm transition-all cursor-pointer active:scale-[0.98] 
                                                 ${isActive ? 'active-card bg-white border-blue-500 ring-1 ring-blue-200 shadow-lg' : 
@@ -486,7 +457,6 @@
                                                 {isCritical && <AlertTriangle className="text-red-500 animate-pulse" size={20} />}
                                             </div>
 
-                                            {/* Progress Bar for Active Activity */}
                                             {isActive && (
                                                 <div className="w-full bg-slate-100 rounded-full h-1.5 mb-3 overflow-hidden">
                                                     <div className="bg-blue-500 h-1.5 rounded-full transition-all duration-1000" style={{ width: `${progressPercent}%` }}></div>
@@ -503,19 +473,16 @@
                                             </div>
                                             <p className="text-sm text-gray-600 mb-3 line-clamp-2">{act.description}</p>
                                             
-                                            {/* Action Buttons */}
                                             <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100" onClick={e => e.stopPropagation()}>
                                                 <div className="flex items-center space-x-2 overflow-x-auto hide-scrollbar">
                                                     <button onClick={() => onLocate(act.coords, act.endCoords)} className="flex items-center text-xs font-medium text-fjord-600 bg-fjord-50 px-2 py-1 rounded hover:bg-fjord-100 whitespace-nowrap">
                                                         <MapPin size={14} className="mr-1" /> {act.endCoords ? 'Ruta' : 'Mapa'}
                                                     </button>
-                                                    
                                                     {act.ticketUrl && (
                                                         <a href={act.ticketUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 hover:bg-emerald-100 whitespace-nowrap">
                                                             <Ticket size={14} className="mr-1" /> Tickets
                                                         </a>
                                                     )}
-
                                                     {act.webcamUrl && (
                                                         <a href={act.webcamUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100 hover:bg-red-100 whitespace-nowrap">
                                                             <Camera size={14} className="mr-1" /> Webcam
@@ -532,44 +499,28 @@
                             );
                         })}
                     </div>
-                    {/* Render Modal */}
                     <ActivityDetailModal activity={selectedActivity} onClose={() => setSelectedActivity(null)} />
-                    <div className="mt-8 text-center text-xs text-slate-400 pb-4">
-                        {UPDATE_DATE}
-                    </div>
+                    <div className="mt-8 text-center text-xs text-slate-400 pb-4">{UPDATE_DATE}</div>
                 </div>
             );
         };
 
         const Budget = ({ itinerary, onToggleComplete }) => {
             const [curr, setCurr] = useState('EUR');
-            const COLORS = ['#2A5B87', '#3A7D44', '#FFB347', '#94a3b8'];
             const paid = useMemo(() => itinerary.filter(a => a.priceEUR > 0), [itinerary]);
-            
-            // Calculator State
-            const [rate, setRate] = useState(11.8); // Default fallback
+            const [rate, setRate] = useState(11.8);
             const [calcAmount, setCalcAmount] = useState('');
-            const [calcMode, setCalcMode] = useState('EUR_TO_NOK'); // or 'NOK_TO_EUR'
+            const [calcMode, setCalcMode] = useState('EUR_TO_NOK');
             const [rateLoading, setRateLoading] = useState(false);
 
-            // Fetch Live Exchange Rate
             useEffect(() => {
                 setRateLoading(true);
                 fetch('https://api.exchangerate-api.com/v4/latest/EUR')
                     .then(res => res.json())
-                    .then(data => {
-                        if(data.rates && data.rates.NOK) {
-                            setRate(data.rates.NOK);
-                        }
-                        setRateLoading(false);
-                    })
-                    .catch(e => {
-                        console.log("Offline or API error, using fallback rate");
-                        setRateLoading(false);
-                    });
+                    .then(data => { if(data.rates?.NOK) setRate(data.rates.NOK); setRateLoading(false); })
+                    .catch(() => setRateLoading(false));
             }, []);
             
-            // Calculator Result
             const calcResult = useMemo(() => {
                 const val = parseFloat(calcAmount);
                 if(isNaN(val)) return '--';
@@ -577,14 +528,25 @@
                 return '€' + (val / rate).toFixed(2);
             }, [calcAmount, rate, calcMode]);
 
-            // Total Planeado
             const totalEstimated = useMemo(() => paid.reduce((acc, c) => acc + (curr === 'EUR' ? c.priceEUR : c.priceNOK), 0), [paid, curr]);
-            
-            // Total Gastado (Completado)
             const totalSpent = useMemo(() => paid.filter(a => a.completed).reduce((acc, c) => acc + (curr === 'EUR' ? c.priceEUR : c.priceNOK), 0), [paid, curr]);
-            
-            // Percentage
             const percentage = totalEstimated > 0 ? Math.min(100, Math.round((totalSpent / totalEstimated) * 100)) : 0;
+
+            // Simple distribution for chart replacement
+            const typeDistribution = useMemo(() => {
+                const types = { transport: 0, food: 0, sightseeing: 0 };
+                paid.forEach(a => {
+                    const price = curr === 'EUR' ? a.priceEUR : a.priceNOK;
+                    if(types[a.type] !== undefined) types[a.type] += price;
+                    else types.sightseeing += price; // Fallback
+                });
+                return types;
+            }, [paid, curr]);
+            
+            const maxVal = Math.max(1, totalEstimated);
+            const wTransport = (typeDistribution.transport / maxVal) * 100;
+            const wFood = (typeDistribution.food / maxVal) * 100;
+            const wSightseeing = (typeDistribution.sightseeing / maxVal) * 100;
 
             return (
                 <div className="pb-24 px-4 pt-6 max-w-lg mx-auto h-full overflow-y-auto">
@@ -597,11 +559,10 @@
                         </div>
                     </div>
 
-                    {/* --- CALCULATOR --- */}
                     <div className="bg-white p-4 rounded-xl shadow-md border border-slate-100 mb-8">
                         <div className="flex justify-between items-center mb-3">
                             <h3 className="font-bold text-gray-700 flex items-center text-sm uppercase">
-                                <Calculator size={16} className="mr-2 text-fjord-500"/> Conversor Rápido
+                                <Calculator size={16} className="mr-2 text-fjord-500"/> Conversor
                             </h3>
                             <span className="text-xs text-slate-400 flex items-center">
                                 {rateLoading && <RefreshCw size={10} className="animate-spin mr-1"/>}
@@ -614,17 +575,11 @@
                                     {calcMode === 'EUR_TO_NOK' ? '€' : 'kr'}
                                 </span>
                                 <input 
-                                    type="number" 
-                                    value={calcAmount}
-                                    onChange={(e) => setCalcAmount(e.target.value)}
-                                    placeholder="0"
-                                    className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-fjord-400 font-bold text-gray-800"
+                                    type="number" value={calcAmount} onChange={(e) => setCalcAmount(e.target.value)}
+                                    placeholder="0" className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-fjord-400 font-bold text-gray-800"
                                 />
                             </div>
-                            <button 
-                                onClick={() => setCalcMode(prev => prev === 'EUR_TO_NOK' ? 'NOK_TO_EUR' : 'EUR_TO_NOK')}
-                                className="p-2 bg-slate-100 rounded-full text-fjord-600 hover:bg-slate-200"
-                            >
+                            <button onClick={() => setCalcMode(prev => prev === 'EUR_TO_NOK' ? 'NOK_TO_EUR' : 'EUR_TO_NOK')} className="p-2 bg-slate-100 rounded-full text-fjord-600 hover:bg-slate-200">
                                 <ArrowRightLeft size={18} />
                             </button>
                             <div className="flex-1 text-right bg-fjord-50 border border-fjord-100 py-2 px-3 rounded-lg">
@@ -633,10 +588,9 @@
                         </div>
                     </div>
 
-                    {/* Cards Resumen */}
                     <div className="grid grid-cols-2 gap-4 mb-6">
                         <div className="bg-white rounded-xl p-4 shadow border border-slate-100">
-                            <p className="text-slate-500 text-xs uppercase font-bold">Gastado (Real)</p>
+                            <p className="text-slate-500 text-xs uppercase font-bold">Gastado</p>
                             <div className="text-2xl font-bold text-emerald-600 mt-1">{curr === 'EUR' ? `€${totalSpent}` : `${totalSpent} kr`}</div>
                         </div>
                         <div className="bg-slate-50 rounded-xl p-4 shadow-sm border border-slate-100">
@@ -645,18 +599,28 @@
                         </div>
                     </div>
 
-                    {/* Progress Bar */}
-                    <div className="mb-2 flex justify-between text-xs font-bold text-slate-500">
-                        <span>Progreso de Gasto</span>
-                        <span>{percentage}%</span>
+                    <div className="w-full bg-slate-200 rounded-full h-4 mb-8 overflow-hidden shadow-inner relative">
+                         <div className="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-500" style={{ width: `${percentage}%` }}></div>
                     </div>
-                    <div className="w-full bg-slate-200 rounded-full h-4 mb-8 overflow-hidden shadow-inner">
-                        <div className="bg-emerald-500 h-4 rounded-full transition-all duration-700 ease-out" style={{ width: `${percentage}%` }}></div>
+
+                    {/* Chart Replacement: CSS Distribution Bar */}
+                    <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-8">
+                        <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase">Distribución de Costes</h3>
+                        <div className="w-full h-6 flex rounded-full overflow-hidden mb-2">
+                            <div style={{width:`${wTransport}%`}} className="bg-blue-600 h-full"></div>
+                            <div style={{width:`${wSightseeing}%`}} className="bg-purple-500 h-full"></div>
+                            <div style={{width:`${wFood}%`}} className="bg-orange-500 h-full"></div>
+                        </div>
+                        <div className="flex text-xs text-gray-500 space-x-4">
+                            <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-blue-600 mr-1"></div>Transporte</div>
+                            <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-purple-500 mr-1"></div>Actividades</div>
+                            <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-orange-500 mr-1"></div>Comida</div>
+                        </div>
                     </div>
 
                     <div className="bg-white rounded-lg shadow-sm border border-slate-200 mb-8">
-                        <h3 className="px-4 py-3 border-b font-bold text-gray-700 bg-slate-50">Lista de Gastos (Marca al pagar)</h3>
-                        {paid.map((a, i) => (
+                        <h3 className="px-4 py-3 border-b font-bold text-gray-700 bg-slate-50">Lista (Toca para marcar)</h3>
+                        {paid.map(a => (
                             <div key={a.id} className="flex justify-between items-center p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => onToggleComplete(a.id)}>
                                 <div className="flex items-center flex-1">
                                     <div className={`mr-3 rounded-full transition-colors ${a.completed ? 'text-emerald-500' : 'text-slate-300'}`}>
@@ -664,10 +628,9 @@
                                     </div>
                                     <div>
                                         <p className={`text-sm font-medium ${a.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{a.title}</p>
-                                        <p className="text-xs text-gray-500 capitalize">{a.type}</p>
                                     </div>
                                 </div>
-                                <div className={`font-bold whitespace-nowrap ml-4 ${a.completed ? 'text-emerald-600' : 'text-gray-700'}`}>
+                                <div className={`font-bold ml-4 ${a.completed ? 'text-emerald-600' : 'text-gray-700'}`}>
                                     {curr === 'EUR' ? `€${a.priceEUR}` : `${a.priceNOK} kr`}
                                 </div>
                             </div>
@@ -677,47 +640,37 @@
             );
         };
 
-        const Guide = () => {
+        const Guide = ({ userLocation }) => {
             const [playing, setPlaying] = useState(null);
             const [weather, setWeather] = useState(null);
             const [hourly, setHourly] = useState([]);
 
-            // Fetch Weather for Flåm
             useEffect(() => {
-                const fetchWeather = async () => {
-                    try {
-                        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=60.86&longitude=7.11&current_weather=true&hourly=temperature_2m,weathercode,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FBerlin&forecast_days=5');
-                        const data = await res.json();
+                fetch('https://api.open-meteo.com/v1/forecast?latitude=60.86&longitude=7.11&current_weather=true&hourly=temperature_2m,weathercode,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FBerlin&forecast_days=5')
+                    .then(res => res.json())
+                    .then(data => {
                         setWeather(data);
-                        
-                        // Process hourly (07:00 to 18:00)
-                        const times = data.hourly.time;
-                        const temps = data.hourly.temperature_2m;
-                        const codes = data.hourly.weathercode;
-                        const probs = data.hourly.precipitation_probability;
-                        
-                        const details = times.map((t, i) => {
-                             const date = new Date(t);
-                             return { hour: date.getHours(), temp: temps[i], code: codes[i], prob: probs[i] };
-                        }).filter(h => h.hour >= 7 && h.hour <= 18);
-                        
-                        setHourly(details);
-                    } catch (e) { console.error("Weather error", e); }
-                };
-                fetchWeather();
+                        if(data.hourly) {
+                            const times = data.hourly.time;
+                            const temps = data.hourly.temperature_2m;
+                            const codes = data.hourly.weathercode;
+                            const probs = data.hourly.precipitation_probability;
+                            const details = times.map((t, i) => ({ hour: new Date(t).getHours(), temp: temps[i], code: codes[i], prob: probs[i] })).filter(h => h.hour >= 7 && h.hour <= 18);
+                            setHourly(details);
+                        }
+                    })
+                    .catch(e => console.error(e));
             }, []);
 
             const playAudio = (word) => {
                 setPlaying(word);
                 if ('speechSynthesis' in window) {
-                    const utterance = new SpeechSynthesisUtterance(word);
-                    utterance.lang = 'no-NO'; // Norwegian
-                    utterance.rate = 0.8; // A bit slower for learning
-                    window.speechSynthesis.speak(utterance);
-                    utterance.onend = () => setPlaying(null);
-                } else {
-                    setTimeout(() => setPlaying(null), 1000);
-                }
+                    const u = new SpeechSynthesisUtterance(word);
+                    u.lang = 'no-NO';
+                    u.rate = 0.8;
+                    window.speechSynthesis.speak(u);
+                    u.onend = () => setPlaying(null);
+                } else { setTimeout(() => setPlaying(null), 1000); }
             };
 
             const getWeatherIcon = (code, size=24) => {
@@ -728,73 +681,71 @@
                 return <Droplets size={size} className="text-blue-400" />;
             };
 
-            const getDayName = (dateStr) => {
-                if(!dateStr) return '';
-                const d = new Date(dateStr);
-                return d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
+            const handleEmergency = () => {
+                if (userLocation) shareLocation(userLocation.lat, userLocation.lng);
+                else {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => shareLocation(pos.coords.latitude, pos.coords.longitude),
+                        () => alert("⚠️ No se pudo obtener ubicación GPS.")
+                    );
+                }
+            };
+
+            const shareLocation = (lat, lng) => {
+                const url = `https://wa.me/?text=${encodeURIComponent(`🆘 SOS! Mi ubicación en Flåm: https://maps.google.com/?q=${lat},${lng}`)}`;
+                window.open(url, '_blank');
             };
 
             return (
                 <div className="pb-24 px-4 pt-6 max-w-lg mx-auto h-full overflow-y-auto">
                     <h2 className="text-2xl font-bold text-fjord-500 mb-6">Guía y Consejos</h2>
                     
-                    {/* Weather Card */}
-                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-5 rounded-xl shadow-lg mb-6 relative overflow-hidden">
-                        <div className="relative z-10 flex justify-between items-center">
+                    <div className="bg-red-600 text-white rounded-xl p-4 shadow-lg mb-6 flex flex-col items-center text-center border-2 border-red-400 animate-pulse">
+                        <div className="flex items-center justify-center mb-2">
+                            <AlertTriangle size={32} className="text-white mr-2" />
+                            <h3 className="text-xl font-bold">EMERGENCIA SOS</h3>
+                        </div>
+                        <button onClick={handleEmergency} className="w-full bg-white text-red-600 font-bold py-3 px-4 rounded-lg shadow mt-2 flex items-center justify-center">
+                            <MapPin size={20} className="mr-2" /> ENVIAR MI UBICACIÓN
+                        </button>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-5 rounded-xl shadow-lg mb-6">
+                        <div className="flex justify-between items-center">
                             <div>
-                                <h3 className="text-blue-100 text-sm font-bold uppercase mb-1">Clima en Flåm (Ahora)</h3>
-                                {weather ? (
-                                    <>
-                                        <div className="text-4xl font-bold">{Math.round(weather.current_weather.temperature)}°C</div>
-                                        <div className="text-sm text-blue-100 mt-1">
-                                            Min: {weather.daily.temperature_2m_min[0]}° | Max: {weather.daily.temperature_2m_max[0]}°
-                                        </div>
-                                    </>
-                                ) : <div className="animate-pulse h-10 w-24 bg-blue-400 rounded mt-2"></div>}
+                                <h3 className="text-blue-100 text-sm font-bold uppercase mb-1">Clima (Ahora)</h3>
+                                {weather ? <div className="text-4xl font-bold">{Math.round(weather.current_weather.temperature)}°C</div> : <div className="text-xl">Cargando...</div>}
                             </div>
-                            <div>
-                                {weather ? getWeatherIcon(weather.current_weather.weathercode, 48) : <CloudSun size={48} className="opacity-50" />}
-                            </div>
+                            {weather && getWeatherIcon(weather.current_weather.weathercode, 48)}
                         </div>
                     </div>
 
-                    {/* Hourly Detail */}
                     {hourly.length > 0 && (
                         <div className="mb-8">
-                             <h3 className="font-bold text-gray-700 mb-3 text-sm uppercase flex items-center">
-                                <Clock size={16} className="mr-2"/> Escala Hora a Hora (07-18h)
-                             </h3>
+                             <h3 className="font-bold text-gray-700 mb-3 text-sm uppercase flex items-center"><Clock size={16} className="mr-2"/> Escala Hora a Hora</h3>
                              <div className="flex overflow-x-auto pb-4 space-x-3 hide-scrollbar">
                                  {hourly.map(h => (
                                      <div key={h.hour} className="flex flex-col items-center bg-white p-3 rounded-lg border border-slate-100 min-w-[70px] shadow-sm">
                                          <span className="text-xs font-bold text-gray-500 mb-1">{h.hour}:00</span>
                                          <div className="my-1">{getWeatherIcon(h.code, 24)}</div>
                                          <span className="font-bold text-fjord-600">{Math.round(h.temp)}°</span>
-                                         {h.prob > 0 && (
-                                             <div className="flex items-center text-[10px] text-blue-500 mt-1 font-medium">
-                                                 <Umbrella size={10} className="mr-0.5" /> {h.prob}%
-                                             </div>
-                                         )}
                                      </div>
                                  ))}
                              </div>
                         </div>
                     )}
 
-                    {/* 5-Day Forecast */}
                     {weather && weather.daily && (
                         <div className="bg-white rounded-xl shadow border border-slate-100 p-4 mb-8">
                              <h3 className="font-bold text-gray-700 mb-3 text-sm uppercase flex items-center"><CalendarClock size={16} className="mr-2"/> Pronóstico 5 Días</h3>
                              <div className="space-y-3">
                                 {weather.daily.time.slice(0, 5).map((day, i) => (
-                                    <div key={day} className="flex justify-between items-center text-sm border-b border-gray-50 last:border-0 pb-2 last:pb-0">
-                                        <span className="font-bold text-gray-600 capitalize w-20">{getDayName(day)}</span>
+                                    <div key={day} className="flex justify-between items-center text-sm border-b border-gray-50 last:border-0 pb-2">
+                                        <span className="font-bold text-gray-600 capitalize w-20">{new Date(day).toLocaleDateString('es-ES', {weekday:'short', day:'numeric'})}</span>
                                         <div className="flex items-center space-x-3">
                                             {getWeatherIcon(weather.daily.weathercode[i])}
                                             <span className="font-medium">
-                                                <span className="text-blue-500">{Math.round(weather.daily.temperature_2m_min[i])}°</span>
-                                                <span className="text-gray-300 mx-1">/</span>
-                                                <span className="text-red-500">{Math.round(weather.daily.temperature_2m_max[i])}°</span>
+                                                <span className="text-blue-500">{Math.round(weather.daily.temperature_2m_min[i])}°</span> / <span className="text-red-500">{Math.round(weather.daily.temperature_2m_max[i])}°</span>
                                             </span>
                                         </div>
                                     </div>
@@ -803,60 +754,31 @@
                         </div>
                     )}
 
-                    {/* --- VISUAL TRANSLATOR --- */}
                     <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white shadow-lg mb-8 relative overflow-hidden">
-                        <div className="relative z-10">
-                            <h3 className="text-indigo-100 text-sm font-bold uppercase mb-2 flex items-center">
-                                <Languages size={18} className="mr-2"/> Traductor Visual
-                            </h3>
-                            <p className="text-sm mb-4 opacity-90 leading-tight">
-                                Apunta con tu cámara a carteles o menús para traducir del noruego al español al instante.
-                            </p>
-                            <a 
-                                href="https://translate.google.com/?sl=no&tl=es&op=images" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="flex items-center justify-center w-full py-3 bg-white text-indigo-700 rounded-lg font-bold shadow hover:bg-indigo-50 transition-colors"
-                            >
-                                <Camera size={20} className="mr-2" />
-                                Activar Cámara Traductora
-                            </a>
-                        </div>
-                        {/* Decorative background circle */}
-                        <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white opacity-10 rounded-full"></div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 mb-8">
-                        <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
-                            <div className="flex items-center mb-2 text-orange-700 font-bold"><AlertCircle size={18} className="mr-2"/> Reserva Online</div>
-                            <p className="text-sm text-orange-800">Reserva tickets ya. No esperes a las 07:00 AM.</p>
-                        </div>
-                        <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-                            <div className="flex items-center mb-2 text-purple-700 font-bold"><ShoppingBag size={18} className="mr-2"/> Compras</div>
-                            <p className="text-sm text-purple-800">Tiendas junto al muelle. Ideal para últimos 30min.</p>
-                        </div>
+                        <h3 className="text-indigo-100 text-sm font-bold uppercase mb-2 flex items-center"><Languages size={18} className="mr-2"/> Traductor Visual</h3>
+                        <a href="https://translate.google.com/?sl=no&tl=es&op=images" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center w-full py-3 bg-white text-indigo-700 rounded-lg font-bold shadow mt-2">
+                            <Camera size={20} className="mr-2" /> Activar Cámara
+                        </a>
                     </div>
                     
-                    <h3 className="text-lg font-bold text-gray-800 mb-4">Pronunciación (Pulsa para oír)</h3>
+                    <h3 className="text-lg font-bold text-gray-800 mb-4">Pronunciación</h3>
                     <div className="bg-white rounded-lg shadow border border-gray-200">
                         {PRONUNCIATIONS.map((item, i) => (
-                            <div key={item.word} className={`p-4 flex justify-between items-center ${i!==PRONUNCIATIONS.length-1?'border-b':''}`}>
+                            <div key={item.word} className="p-4 flex justify-between items-center border-b last:border-0 border-gray-100">
                                 <div>
                                     <div className="flex items-baseline space-x-2">
                                         <span className="font-bold text-lg text-fjord-600">{item.word}</span>
                                         <span className="text-xs text-gray-400 font-mono">{item.phonetic}</span>
                                     </div>
-                                    <div className="text-sm font-medium text-gray-700">"{item.simplified}"</div>
+                                    <div className="text-sm text-gray-700">"{item.simplified}"</div>
                                 </div>
-                                <button onClick={() => playAudio(item.word)} className={`p-3 rounded-full transition-all active:scale-95 ${playing===item.word?'bg-emerald-100 text-emerald-600 ring-2 ring-emerald-400':'bg-slate-100 text-slate-500'}`}>
-                                    <Volume2 size={20} className={playing===item.word ? 'animate-pulse' : ''} />
+                                <button onClick={() => playAudio(item.word)} className={`p-3 rounded-full ${playing===item.word?'bg-emerald-100 text-emerald-600':'bg-slate-100 text-slate-500'}`}>
+                                    <Volume2 size={20} />
                                 </button>
                             </div>
                         ))}
                     </div>
-                    <div className="mt-8 text-center text-xs text-slate-400 pb-4">
-                        Actualizado el {UPDATE_DATE}
-                    </div>
+                    <div className="mt-8 text-center text-xs text-slate-400 pb-4">Actualizado el {UPDATE_DATE}</div>
                 </div>
             );
         };
@@ -868,54 +790,44 @@
 
             useEffect(() => {
                 if(!mapRef.current || mapInstance.current) return;
+                // Use global L
                 const map = L.map(mapRef.current).setView([60.8638, 7.1187], 13);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
                 mapInstance.current = map;
                 
-                // Fix Leaflet icons
                 delete L.Icon.Default.prototype._getIconUrl;
                 L.Icon.Default.mergeOptions({
                     iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
                     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
                     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
                 });
-
                 return () => { map.remove(); mapInstance.current = null; };
             }, []);
 
             useEffect(() => {
                 const map = mapInstance.current;
                 if(!map) return;
-                
-                // Clear
                 layersRef.current.forEach(l => l.remove());
                 layersRef.current = [];
 
-                // Activities
                 const endIcon = L.divIcon({ className: 'end-marker', html: '<div style="background:#3A7D44;width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 0 5px rgba(0,0,0,0.5);"></div>', iconSize: [12,12] });
 
                 activities.forEach(act => {
-                    const m = L.marker([act.coords.lat, act.coords.lng]).addTo(map).bindPopup(act.title);
-                    layersRef.current.push(m);
-
+                    layersRef.current.push(L.marker([act.coords.lat, act.coords.lng]).addTo(map).bindPopup(act.title));
                     if(act.endCoords) {
-                        const em = L.marker([act.endCoords.lat, act.endCoords.lng], {icon: endIcon}).addTo(map).bindPopup('Fin: ' + act.title);
-                        layersRef.current.push(em);
-                        const poly = L.polyline([[act.coords.lat, act.coords.lng], [act.endCoords.lat, act.endCoords.lng]], {color: '#2A5B87', weight: 3, dashArray: '5,10'}).addTo(map);
-                        layersRef.current.push(poly);
+                        layersRef.current.push(L.marker([act.endCoords.lat, act.endCoords.lng], {icon: endIcon}).addTo(map).bindPopup('Fin: ' + act.title));
+                        layersRef.current.push(L.polyline([[act.coords.lat, act.coords.lng], [act.endCoords.lat, act.endCoords.lng]], {color: '#2A5B87', weight: 3, dashArray: '5,10'}).addTo(map));
                     }
                 });
 
                 if(userLocation) {
                     const uIcon = L.divIcon({ className: 'user', html: '<div style="background:#3b82f6;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 10px rgba(0,0,0,0.3);"></div>', iconSize: [16,16] });
-                    const um = L.marker([userLocation.lat, userLocation.lng], {icon: uIcon}).addTo(map);
-                    layersRef.current.push(um);
+                    layersRef.current.push(L.marker([userLocation.lat, userLocation.lng], {icon: uIcon}).addTo(map));
                 }
             }, [activities, userLocation]);
 
             useEffect(() => {
                 if(focusedLocation && mapInstance.current) {
-                    // ZOOM LEVEL INCREASED TO 18 (MAX for OSM)
                     mapInstance.current.flyTo([focusedLocation.lat, focusedLocation.lng], 18);
                 }
             }, [focusedLocation]);
@@ -930,7 +842,6 @@
             const [mapFocus, setMapFocus] = useState(null);
             const [countdown, setCountdown] = useState('');
 
-            // Load saved state
             useEffect(() => {
                 const s = localStorage.getItem('flam_v1');
                 if(s) {
@@ -950,7 +861,6 @@
 
             const locate = (c, ec) => { setMapFocus(c); setActiveTab('map'); };
 
-            // Clock
             useEffect(() => {
                 const t = setInterval(() => {
                     const now = new Date();
@@ -968,7 +878,6 @@
                 return () => clearInterval(t);
             }, []);
 
-            // GPS
             useEffect(() => {
                 if('geolocation' in navigator) {
                     navigator.geolocation.watchPosition(p => setUserLocation({lat:p.coords.latitude, lng:p.coords.longitude}), null, {enableHighAccuracy:true});
@@ -989,7 +898,7 @@
                         {activeTab === 'timeline' && <div className="h-full overflow-y-auto"><Timeline itinerary={itinerary} onToggleComplete={toggle} onLocate={locate} userLocation={userLocation} /></div>}
                         {activeTab === 'map' && <div className="h-full w-full"><MapComponent activities={itinerary} userLocation={userLocation} focusedLocation={mapFocus} /></div>}
                         {activeTab === 'budget' && <Budget itinerary={itinerary} onToggleComplete={toggle} />}
-                        {activeTab === 'guide' && <Guide />}
+                        {activeTab === 'guide' && <Guide userLocation={userLocation} />}
                     </main>
 
                     <nav className="bg-white border-t border-slate-200 shadow-lg z-30 pb-2">
@@ -1015,13 +924,10 @@
         root.render(<App />);
     </script>
     
-    <!-- Register Service Worker for Offline Mode -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./service-worker.js')
-            .then(reg => console.log('Service Worker registrado'))
-            .catch(err => console.log('Error SW:', err));
+          navigator.serviceWorker.register('./service-worker.js').catch(err => console.log('Error SW:', err));
         });
       }
     </script>
