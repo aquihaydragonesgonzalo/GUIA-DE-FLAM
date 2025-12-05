@@ -78,7 +78,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Umbrella, X, Eye, Lightbulb, ChevronDown, Ticket, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils, Instagram, CloudRain, CloudSnow, Sun, Smartphone } from 'lucide-react';
+        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Umbrella, X, Eye, Lightbulb, ChevronDown, Ticket, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils, Instagram, CloudRain, CloudSnow, Sun, Smartphone, Sunrise, Sunset } from 'lucide-react';
 
         // --- CONSTANTS ---
         const SHIP_DEPARTURE_TIME = "18:00";
@@ -644,7 +644,7 @@
             const [hourly, setHourly] = useState([]);
 
             useEffect(() => {
-                fetch('https://api.open-meteo.com/v1/forecast?latitude=60.86&longitude=7.11&current_weather=true&hourly=temperature_2m,weathercode,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=Europe%2FBerlin&forecast_days=5')
+                fetch('https://api.open-meteo.com/v1/forecast?latitude=60.86&longitude=7.11&current_weather=true&hourly=temperature_2m,weathercode,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weathercode,sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=5')
                     .then(res => res.json())
                     .then(data => {
                         setWeather(data);
@@ -721,6 +721,40 @@
                             {weather && getWeatherIcon(weather.current_weather.weathercode, 48)}
                         </div>
                     </div>
+
+                    {weather && weather.daily && weather.daily.sunrise && (
+                        <div className="bg-white rounded-xl shadow border border-slate-100 p-4 mb-6 flex justify-between items-center">
+                            <div className="flex flex-col items-center w-1/3 border-r border-slate-100">
+                                <span className="text-xs text-slate-400 uppercase font-bold mb-1">Amanecer</span>
+                                <div className="flex items-center text-amber-500">
+                                    <Sunrise size={20} className="mr-1" />
+                                    <span className="font-bold text-lg">
+                                        {new Date(weather.daily.sunrise[0]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-center w-1/3 border-r border-slate-100">
+                                <span className="text-xs text-slate-400 uppercase font-bold mb-1">Luz Total</span>
+                                <span className="font-bold text-slate-600 text-lg">
+                                    {(() => {
+                                        const s = new Date(weather.daily.sunrise[0]);
+                                        const e = new Date(weather.daily.sunset[0]);
+                                        const diff = (e - s) / (1000 * 60 * 60);
+                                        return Math.floor(diff) + 'h ' + Math.round((diff % 1) * 60) + 'm';
+                                    })()}
+                                </span>
+                            </div>
+                            <div className="flex flex-col items-center w-1/3">
+                                <span className="text-xs text-slate-400 uppercase font-bold mb-1">Anochecer</span>
+                                <div className="flex items-center text-indigo-500">
+                                    <Sunset size={20} className="mr-1" />
+                                    <span className="font-bold text-lg">
+                                        {new Date(weather.daily.sunset[0]).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {hourly.length > 0 && (
                         <div className="mb-8">
