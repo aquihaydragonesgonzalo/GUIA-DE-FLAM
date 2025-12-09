@@ -85,7 +85,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Umbrella, X, Eye, Lightbulb, ChevronDown, Ticket, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils, Instagram, CloudRain, CloudSnow, Sun, Smartphone, Sunrise, Sunset, Moon, Play, Plus, Trash2 } from 'lucide-react';
+        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Umbrella, X, Eye, Lightbulb, ChevronDown, Ticket, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils, Instagram, CloudRain, CloudSnow, Sun, Smartphone, Sunrise, Sunset, Moon, Play, Plus, Trash2, Ship } from 'lucide-react';
 
         // --- CONSTANTS ---
         const SHIP_DEPARTURE_TIME = "18:00";
@@ -105,7 +105,7 @@
 
         const INITIAL_ITINERARY = [
             {
-                id: '1', title: 'Llegada a Puerto', startTime: '07:00', endTime: '07:15',
+                id: '1', title: 'Llegada al Puerto de Flam', startTime: '07:00', endTime: '07:00',
                 locationName: 'Fiordo de Aurlandsfjord', coords: COORDS.FLAM_DOCK,
                 description: 'El MSC Euribia atraca en el puerto de Flåm.',
                 fullDescription: 'Disfruta de las vistas de la llegada navegando por el fiordo antes de atracar. El barco inicia maniobras de atraque.',
@@ -199,13 +199,22 @@
                 priceNOK: 0, priceEUR: 0, type: 'logistics', completed: false
             },
             {
-                id: '10', title: '¡A BORDO! (Límite 17:45)', startTime: '17:45', endTime: '18:00',
+                id: '10', title: '¡A BORDO! (Límite)', startTime: '17:45', endTime: '17:45',
                 locationName: 'Muelle', coords: COORDS.FLAM_DOCK,
-                description: 'Pasarela se retira 17:45. Zarpe 18:00.',
-                fullDescription: 'Regreso obligatorio al barco. A las 17:45 se retira la pasarela. A las 18:00 el barco inicia la maniobra de salida.',
+                description: 'Pasarela se retira. Hora límite.',
+                fullDescription: 'Regreso obligatorio al barco. A las 17:45 se retira la pasarela de acceso. No hay tolerancia.',
                 tips: '¡ADVERTENCIA! No llegues tarde. Hora límite absoluta para embarcar: 17:45.',
-                keyDetails: 'CRÍTICO: SALIDA DEL BARCO 18:00.',
+                keyDetails: 'CRÍTICO: LÍMITE EMBARQUE.',
                 priceNOK: 0, priceEUR: 0, type: 'logistics', completed: false, notes: 'CRITICAL'
+            },
+            {
+                id: '11', title: 'Zarpa el MSC Euribia', startTime: '18:00', endTime: '18:00',
+                locationName: 'Fiordo Aurlandsfjord', coords: COORDS.FLAM_DOCK,
+                description: 'El barco inicia la navegación de salida.',
+                fullDescription: 'Despedida de Flåm. Disfruta de las vistas del fiordo a la inversa mientras el barco se aleja.',
+                tips: 'Sube a cubierta para ver la maniobra de salida y el atardecer en el fiordo.',
+                keyDetails: 'Adiós Flåm.',
+                priceNOK: 0, priceEUR: 0, type: 'logistics', completed: false
             }
         ];
 
@@ -279,7 +288,7 @@
                             <h3 className="text-xl font-bold pr-8">{activity.title}</h3>
                             <div className="flex items-center text-fjord-100 text-sm mt-1">
                                 <Clock size={14} className="mr-1" />
-                                {activity.startTime} - {activity.endTime}
+                                {activity.startTime === activity.endTime ? activity.startTime : `${activity.startTime} - ${activity.endTime}`}
                             </div>
                             <button onClick={onClose} className="absolute top-4 right-4 text-white/80 hover:text-white bg-white/10 rounded-full p-1">
                                 <X size={20} />
@@ -349,10 +358,18 @@
                             const startMinutes = sh * 60 + sm;
                             const endMinutes = eh * 60 + em;
                             
+                            // Check if single point in time (start == end)
+                            const isPointInTime = startMinutes === endMinutes;
+                            
                             // Status Checks
-                            const isActive = currentTimeMinutes >= startMinutes && currentTimeMinutes < endMinutes;
+                            // If point in time, active for 1 minute or special handling
+                            const isActive = isPointInTime 
+                                ? (currentTimeMinutes >= startMinutes && currentTimeMinutes < startMinutes + 15) // Point active for 15 mins visually
+                                : (currentTimeMinutes >= startMinutes && currentTimeMinutes < endMinutes);
+                                
                             const isPast = currentTimeMinutes >= endMinutes;
                             const isCritical = act.notes === 'CRITICAL';
+                            const isDeparture = act.notes === 'DEPARTURE';
                             const duration = calculateDuration(act.startTime, act.endTime);
                             
                             // Calculate Gap to next activity
@@ -390,7 +407,7 @@
 
                             // Calculate Progress if Active
                             let progress = 0;
-                            if (isActive) {
+                            if (isActive && !isPointInTime) {
                                 const totalDuration = endMinutes - startMinutes;
                                 const elapsed = currentTimeMinutes - startMinutes;
                                 progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
@@ -417,9 +434,10 @@
                                                 ${isActive ? 'bg-white border-blue-400 ring-2 ring-blue-100 shadow-blue-100' : 'bg-white border-slate-200 hover:border-blue-300'}
                                                 ${act.completed ? 'opacity-70 bg-slate-50' : ''}
                                                 ${isCritical ? 'bg-red-50 border-red-200' : ''}
+                                                ${isDeparture ? 'bg-slate-800 border-slate-700 text-white' : ''}
                                             `}
                                         >
-                                            {isActive && (
+                                            {isActive && !isPointInTime && (
                                                 <div className="absolute top-0 left-0 w-full h-1 bg-blue-100">
                                                     <div className="h-full bg-blue-500 transition-all duration-1000" style={{ width: `${progress}%` }}></div>
                                                 </div>
@@ -428,13 +446,16 @@
                                             <div className="flex justify-between items-start mb-2">
                                                 <div>
                                                     <div className="flex items-center space-x-2 mb-1">
-                                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${isActive ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                                                            {act.startTime}
+                                                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
+                                                            isDeparture ? 'bg-slate-700 text-slate-200' :
+                                                            isActive ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
+                                                        }`}>
+                                                            {isPointInTime ? act.startTime : `${act.startTime} - ${act.endTime}`}
                                                         </span>
-                                                        <span className="text-xs text-slate-400 font-medium">{duration}</span>
+                                                        {!isPointInTime && <span className="text-xs text-slate-400 font-medium">{duration}</span>}
                                                         {isActive && <span className="text-[10px] font-bold text-blue-600 animate-pulse">⚡ EN CURSO</span>}
                                                     </div>
-                                                    <h3 className={`font-bold text-lg leading-tight ${isCritical ? 'text-red-700' : 'text-slate-800'}`}>
+                                                    <h3 className={`font-bold text-lg leading-tight ${isCritical ? 'text-red-700' : isDeparture ? 'text-white' : 'text-slate-800'}`}>
                                                         {act.title}
                                                     </h3>
                                                 </div>
@@ -446,13 +467,14 @@
                                                     )}
                                                     {act.ticketUrl && <Ticket size={18} className="text-emerald-500" />}
                                                     {isCritical && <AlertTriangle size={20} className="text-red-500" />}
+                                                    {isDeparture && <Ship size={20} className="text-blue-300" />}
                                                 </div>
                                             </div>
 
-                                            <p className="text-sm text-slate-600 line-clamp-2 mb-2">{act.description}</p>
+                                            <p className={`text-sm line-clamp-2 mb-2 ${isDeparture ? 'text-slate-300' : 'text-slate-600'}`}>{act.description}</p>
 
-                                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                                                <div className="flex items-center text-xs text-slate-500">
+                                            <div className={`flex items-center justify-between mt-2 pt-2 border-t ${isDeparture ? 'border-slate-700' : 'border-slate-100'}`}>
+                                                <div className={`flex items-center text-xs ${isDeparture ? 'text-slate-400' : 'text-slate-500'}`}>
                                                     <MapPin size={12} className="mr-1" />
                                                     {act.locationName}
                                                     {userLocation && (
@@ -466,7 +488,7 @@
                                                     onClick={(e) => { e.stopPropagation(); onLocate(act.coords, act.endCoords); }}
                                                     className="p-1.5 hover:bg-slate-100 rounded-full text-fjord-600"
                                                 >
-                                                    <MapIcon size={16} />
+                                                    <MapIcon size={16} className={isDeparture ? 'text-blue-300' : ''} />
                                                 </button>
                                             </div>
                                         </div>
@@ -488,7 +510,7 @@
         };
 
         const Budget = ({ itinerary }) => {
-            const [currency, setCurrency] = useState('EUR'); // EUR or NOK
+            const [currency, setCurrency] = useState('NOK'); // Default NOK
             const [rate, setRate] = useState(11.8); // Default fallback rate
             const [calcAmount, setCalcAmount] = useState('');
             const [calcMode, setCalcMode] = useState('NOK_TO_EUR'); // Default NOK to EUR
