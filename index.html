@@ -145,6 +145,34 @@
             }
         ];
 
+        const CRUISE_AUDIO_GUIDE = [
+            {
+                id: 1,
+                title: "1. La Salida: Navegando el Aurlandsfjord (0 - 30 min)",
+                text: "Bienvenidos a bordo. Si el tren de Flåm era altura, esto es profundidad y silencio. Estamos zarpando desde Flåm por el Aurlandsfjord. Respirad hondo. Notaréis que el barco (especialmente si vais en el Future of the Fjords) apenas hace ruido. Es eléctrico, diseñado para respetar la paz de este santuario natural. A estribor (vuestra derecha saliendo de Flåm), veréis pequeñas granjas que parecen imposibles, colgadas literalmente de los precipicios. Fijaos bien cuando pasemos cerca de Undredal, ese pueblecito de colores que veréis en la orilla. ¿Os suena de algo? Dicen que inspiró el reino de Arendelle en la película Frozen de Disney. Es famoso por dos cosas: su iglesia de madera (la más pequeña de Escandinavia en uso) y su queso de cabra marrón. Si el viento es favorable, ¡casi se puede oler!"
+            },
+            {
+                id: 2,
+                title: "2. El Giro: Entrando en lo Desconocido (30 - 60 min)",
+                text: "Atentos ahora, porque llegamos a una encrucijada monumental. El fiordo se bifurca en el monte Beitelen. Dejamos el Aurlandsfjord y giramos a la izquierda para entrar en el Nærøyfjord. Aquí es donde la naturaleza se pone seria. Este fiordo es Patrimonio de la Humanidad de la UNESCO y la razón es su estrechez dramática. Las montañas que nos rodean se disparan hasta los 1.700 metros de altura, mientras que el agua bajo nosotros tiene hasta 500 metros de profundidad. Sentíos pequeños, porque aquí, la naturaleza es la que manda."
+            },
+            {
+                id: 3,
+                title: "3. El Paso Angosto: Bakka y el Silencio (60 - 90 min)",
+                text: "Estamos llegando al punto más crítico y espectacular del viaje: la zona de Bakka. Mirad a vuestro alrededor. El fiordo se estrecha tanto que en su punto más angosto solo hay 250 metros de orilla a orilla. ¡Casi podríais saludar a la gente en la orilla opuesta! En esta zona el agua es poco profunda, apenas 12 metros, lo que obligaba a los grandes barcos antiguos a maniobrar con cuidado. Fijaos en las cascadas que caen verticalmente, como la Sagfossen. En invierno se congelan creando esculturas de hielo gigantes; en verano, su rugido es la banda sonora perfecta para este desfiladero de agua."
+            },
+            {
+                id: 4,
+                title: "4. Desembarco: Gudvangen, Tierra de Vikingos (90 - 120 min)",
+                text: "Al fondo ya se divisa el final del fiordo: Gudvangen. Este lugar ha sido un punto de comercio desde la Era Vikinga. De hecho, al desembarcar, si tenéis tiempo, veréis el poblado vikingo 'Njardarheimr'. Aquí termina nuestra travesía marítima. Las paredes del valle parecen cerrarse sobre nosotros, creando una atmósfera casi mística. Dirigíos hacia los autobuses que están esperando a pocos metros del muelle para la segunda parte de nuestra aventura."
+            },
+            {
+                id: 5,
+                title: "5. El Regreso: El Autobús por el Valle de Nærøy (aprox. 20 min)",
+                text: "Ya estamos cómodamente sentados en el autobús. El regreso a Flåm es rápido, pero interesante por el contraste. Vamos a recorrer el fondo del valle de Nærøydalen. Mirad hacia arriba por las ventanillas. Esas montañas que antes veíamos desde el agua, ahora nos rodean por carretera. En breve, entraremos en el Túnel de Gudvanga. Con sus 11,4 kilómetros, es el segundo túnel de carretera más largo de esta región. Es una obra de ingeniería moderna que conecta estos pueblos aislados en invierno. En unos 20 minutos veremos la luz al final del túnel y estaremos de vuelta en Flåm, completando nuestro círculo perfecto por tierra y mar."
+            }
+        ];
+
         const INITIAL_ITINERARY = [
             {
                 id: '1', title: 'Llegada al Puerto de Flam', startTime: '07:00', endTime: '07:00',
@@ -349,6 +377,10 @@
                     setPlayingTrackId(track.id);
                 }
             };
+            
+            // Determine which audio guide to use (if any)
+            const audioData = activity.id === '4' ? TRAIN_AUDIO_GUIDE : (activity.id === '6' ? CRUISE_AUDIO_GUIDE : null);
+            const audioTitle = activity.id === '4' ? "Audioguía a Bordo" : "Audioguía del Fiordo";
 
             return (
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -367,14 +399,14 @@
                         
                         {/* Content */}
                         <div className="p-5 overflow-y-auto">
-                            {/* Audio Guide Section - ONLY FOR TRAIN (ID 4) */}
-                            {activity.id === '4' && (
+                            {/* Audio Guide Section */}
+                            {audioData && (
                                 <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-inner">
                                     <h4 className="flex items-center text-fjord-600 font-bold mb-3 border-b border-slate-200 pb-2">
-                                        <Headphones className="mr-2" size={20}/> Audioguía a Bordo
+                                        <Headphones className="mr-2" size={20}/> {audioTitle}
                                     </h4>
                                     <div className="space-y-3">
-                                        {TRAIN_AUDIO_GUIDE.map((track) => {
+                                        {audioData.map((track) => {
                                             const isPlaying = playingTrackId === track.id;
                                             return (
                                                 <div key={track.id} className={`p-3 rounded-lg border transition-all ${isPlaying ? 'bg-white border-blue-400 shadow-md' : 'bg-white border-slate-100'}`}>
@@ -572,7 +604,7 @@
                                                     </h3>
                                                 </div>
                                                 <div className="flex gap-2 pl-2 items-center">
-                                                    {act.id === '4' && <Headphones size={18} className="text-purple-500" />}
+                                                    {(act.id === '4' || act.id === '6') && <Headphones size={18} className="text-purple-500" />}
                                                     {act.webcamUrl && (
                                                         <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">
                                                             WEBCAM
