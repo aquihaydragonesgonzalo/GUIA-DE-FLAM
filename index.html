@@ -173,6 +173,47 @@
             }
         ];
 
+        const STEGASTEIN_AUDIO_GUIDE = [
+            {
+                id: 1,
+                title: "1. Saliendo de Flåm: El Fiordo a Ras de Suelo (0 - 10 min)",
+                text: "Bienvenidos al autobús. Si hasta ahora habéis visto el fiordo desde abajo, preparaos para cambiar de perspectiva radicalmente. Salimos de Flåm bordeando la costa hacia el pueblo vecino de Aurland. A vuestra izquierda tenéis el Aurlandsfjord. Fijaos en el color del agua; desde aquí abajo se ve oscura y profunda, pero esperad a verla desde arriba. Pasaremos por Otternes Bygdetun, ese grupo de casitas antiguas de madera en la ladera. Es una granja del siglo XVIII que parece congelada en el tiempo. Aquí vivían familias enteras subsistiendo de lo poco que la tierra inclinada les daba."
+            },
+            {
+                id: 2,
+                title: "2. Aurland: El Centro del Municipio (10 - 20 min)",
+                text: "Llegamos a Aurlandsvangen, el 'hermano mayor' de Flåm y centro administrativo de la zona. Aquí vive la gente de verdad, no solo turistas. ¿Veis esa iglesia de piedra blanca? Es la Vangen Kirke, construida en el año 1202. Es la iglesia de piedra más grande de toda la región de Sogn, un símbolo de poder en la época medieval. Pero no nos detenemos aquí. Ahora empieza lo bueno. El autobús va a encarar la montaña. Respirad hondo si tenéis vértigo, porque vamos a subir por la famosa 'Carretera de la Nieve'."
+            },
+            {
+                id: 3,
+                title: "3. El Ascenso: La Carretera de la Nieve (20 - 30 min)",
+                text: "Estamos en la Aurlandsfjellet, una de las 18 Rutas Escénicas Nacionales de Noruega. Antiguamente, esta era la única forma de cruzar hacia Lærdal cuando el fiordo se congelaba o no había barcos. La carretera se retuerce en curvas de herradura mientras ganamos altura rápidamente. Mirad cómo los árboles empiezan a hacerse más pequeños. En invierno, esta carretera es un muro de nieve de varios metros de altura (de ahí su nombre), pero incluso en verano podréis ver parches blancos si miráis a las cumbres lejanas. La ingeniería para mantener esta carretera abierta es titánica."
+            },
+            {
+                id: 4,
+                title: "4. La Llegada: El Mirador Stegastein (30 - 35 min)",
+                text: "¡Ya estamos aquí! 650 metros sobre el nivel del mar. El autobús se detiene. Al bajar, veréis una estructura de madera y acero que parece desafiar a la gravedad. Es el mirador de Stegastein. Diseñado por los arquitectos Todd Saunders y Tommie Wilhelmsen, es una rampa de 30 metros de largo que sale disparada hacia el vacío. Y lo mejor: al final, la barandilla es de cristal. Te da la sensación de estar volando literalmente sobre el fiordo. No tengáis miedo, ¡es totalmente seguro! Desde la punta, tendréis la vista más icónica y fotografiada de Noruega: el fiordo curvándose bajo vuestros pies como una cinta azul entre gigantes de piedra."
+            }
+        ];
+
+        const FLAM_CENTER_AUDIO_GUIDE = [
+            {
+                id: 1,
+                title: "1. Flåm: El Tesoro Escondido (Introducción y Ubicación)",
+                text: "¡Bienvenidos de nuevo a Flåm! Si os fijáis en el mapa, estamos en un lugar privilegiado: el punto más interior del Aurlandsfjord, que a su vez es un brazo del inmenso Sognefjord, el Rey de los Fiordos noruegos. El nombre 'Flåm' deriva de la palabra nórdica antigua Flá, que significa 'pequeño terreno llano', algo que es muy cierto si miramos a las enormes montañas que nos rodean. Flåm no es una ciudad, es un pequeño pueblo con poco más de 400 habitantes permanentes, pero con un papel gigante. Es un verdadero eje de transporte y aventura. Desde aquí se inician algunas de las experiencias más famosas de Noruega: el ferrocarril, el crucero silencioso y la carretera a Stegastein."
+            },
+            {
+                id: 2,
+                title: "2. La Atmósfera y la Naturaleza (Los Contrastes)",
+                text: "Fijaos en el dramático contraste. Estamos rodeados por paredes de roca que se elevan más de mil metros, con nieve perpetua en las cimas. Sin embargo, aquí abajo, el clima es relativamente suave. El pueblo está cortado por el río Flåmselvi, que es el río que desciende desde la estación de Myrdal y que hemos seguido en el tren. Este río trae vida, salmón y el agua dulce que se mezcla con el agua salada del fiordo. Sentiréis la paz de estar en un lugar que ha servido de refugio y puerto desde tiempos inmemoriales."
+            },
+            {
+                id: 3,
+                title: "3. El Centro de Actividad (Qué ver y hacer)",
+                text: "Si tenéis tiempo entre una excursión y otra, Flåm ofrece un par de puntos interesantes justo aquí, en la terminal: El Centro del Ferrocarril: Justo al lado de la estación, este pequeño museo cuenta la historia épica de la construcción del Flåmsbana. Es fascinante ver las fotos y el equipo antiguo que utilizaron los obreros. A Taste of Flåm: ¿Buscáis algo local? Aquí podéis probar las cervezas artesanales de la microcervecería Ægir, inspiradas en la mitología nórdica y los ingredientes locales. El pub tiene un diseño exterior que imita una iglesia de madera (Stavkirke). Compras: La mayoría de las tiendas se centran en artículos de lana noruega, souvenirs vikingos y, por supuesto, la ropa y equipo de montaña que caracteriza a esta región. Flåm es, en esencia, la puerta de entrada a la Noruega salvaje. Es el lugar perfecto para tomar ese último café, enviar una postal y grabar en vuestra mente la escala real de los fiordos."
+            }
+        ];
+
         const INITIAL_ITINERARY = [
             {
                 id: '1', title: 'Llegada al Puerto de Flam', startTime: '07:00', endTime: '07:00',
@@ -379,8 +420,22 @@
             };
             
             // Determine which audio guide to use (if any)
-            const audioData = activity.id === '4' ? TRAIN_AUDIO_GUIDE : (activity.id === '6' ? CRUISE_AUDIO_GUIDE : null);
-            const audioTitle = activity.id === '4' ? "Audioguía a Bordo" : "Audioguía del Fiordo";
+            let audioData = null;
+            let audioTitle = "";
+            
+            if (activity.id === '4') {
+                audioData = TRAIN_AUDIO_GUIDE;
+                audioTitle = "Audioguía a Bordo";
+            } else if (activity.id === '6') {
+                audioData = CRUISE_AUDIO_GUIDE;
+                audioTitle = "Audioguía del Fiordo";
+            } else if (activity.id === '7') {
+                audioData = STEGASTEIN_AUDIO_GUIDE;
+                audioTitle = "Audioguía Rumbo a las Nubes";
+            } else if (activity.id === '8') {
+                audioData = FLAM_CENTER_AUDIO_GUIDE;
+                audioTitle = "Audioguía Flåm Centro";
+            }
 
             return (
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -604,7 +659,7 @@
                                                     </h3>
                                                 </div>
                                                 <div className="flex gap-2 pl-2 items-center">
-                                                    {(act.id === '4' || act.id === '6') && <Headphones size={18} className="text-purple-500" />}
+                                                    {(act.id === '4' || act.id === '6' || act.id === '7' || act.id === '8') && <Headphones size={18} className="text-purple-500" />}
                                                     {act.webcamUrl && (
                                                         <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">
                                                             WEBCAM
