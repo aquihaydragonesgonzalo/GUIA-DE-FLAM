@@ -77,6 +77,20 @@
         
         @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
         .active-card { animation: pulse-border 2s infinite; }
+        
+        .equalizer-bar {
+            width: 3px;
+            background-color: currentColor;
+            animation: equalize 1s infinite;
+        }
+        .equalizer-bar:nth-child(2) { animation-delay: 0.2s; }
+        .equalizer-bar:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes equalize {
+            0% { height: 3px; }
+            50% { height: 12px; }
+            100% { height: 3px; }
+        }
     </style>
 </head>
 <body>
@@ -85,7 +99,7 @@
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useMemo, useRef } from 'react';
         import { createRoot } from 'react-dom/client';
-        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Umbrella, X, Eye, Lightbulb, ChevronDown, Ticket, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils, Instagram, CloudRain, CloudSnow, Sun, Smartphone, Sunrise, Sunset, Moon, Play, Plus, Trash2, Ship } from 'lucide-react';
+        import { CalendarClock, Map as MapIcon, Wallet, BookOpen, Anchor, CheckCircle2, Circle, MapPin, AlertTriangle, Clock, ArrowRight, TrendingDown, Info, AlertCircle, ShoppingBag, Volume2, Camera, CloudSun, Wind, Droplets, Umbrella, X, Eye, Lightbulb, ChevronDown, Ticket, Zap, Calculator, ArrowRightLeft, RefreshCw, Languages, Utensils, Instagram, CloudRain, CloudSnow, Sun, Smartphone, Sunrise, Sunset, Moon, Play, Pause, Headphones, Plus, Trash2, Ship } from 'lucide-react';
 
         // --- CONSTANTS ---
         const SHIP_DEPARTURE_TIME = "18:00";
@@ -102,6 +116,34 @@
             STEGASTEIN_VIEWPOINT: { lat: 60.9085, lng: 7.2123 },
             VISITOR_CENTER: { lat: 60.8622, lng: 7.1115 }
         };
+
+        const TRAIN_AUDIO_GUIDE = [
+            {
+                id: 1,
+                title: "1. La Salida: Dejando el Fiordo (0 - 10 min)",
+                text: "Bienvenidos a bordo del Flåmsbana. Mirad por la ventana. Ahora mismo estamos dejando atrás las aguas color esmeralda del Aurlandsfjord, un brazo del majestuoso Sognefjord. Estamos a nivel del mar, pero en menos de una hora, estaremos a casi 900 metros de altura. Este no es un tren cualquiera; es una hazaña de la ingeniería noruega. La construcción comenzó en 1923 y tardó casi 20 años en completarse. Fijaos en el paisaje: pasamos de un clima costero suave a un entorno de alta montaña en solo 20 kilómetros. Relajaos y preparaos, porque el valle de Flåm se va a estrechar y las paredes de roca van a empezar a crecer hacia el cielo."
+            },
+            {
+                id: 2,
+                title: "2. El Valle y la Granja Flåm (10 - 25 min)",
+                text: "A medida que avanzamos, veréis pequeñas granjas aferradas a las laderas. Parecen de cuento, ¿verdad? Fijaos en la iglesia de Flåm, construida en madera oscura en el siglo XVII. El río que nos acompaña, el Flåmselvi, es famoso por su salmón. Pero lo más impresionante aquí es la pendiente. Este tren tiene una inclinación del 5,5% en casi todo el trayecto. Es decir, subimos un metro por cada 18 metros que avanzamos. Es una de las vías de ancho estándar más empinadas del mundo que no utiliza cremallera ni cables, solo la pura potencia de las locomotoras eléctricas verdes que nos empujan."
+            },
+            {
+                id: 3,
+                title: "3. Los Túneles y la Ingeniería (25 - 40 min)",
+                text: "Ahora entramos en la sección más técnica. Cruzaremos un total de 20 túneles. Y aquí viene el dato que os dejará helados: 18 de ellos fueron excavados totalmente a mano. Cada metro de túnel costaba a los trabajadores un mes de arduo trabajo en la oscuridad y el frío. En breve, el tren hará un giro de herradura dentro de la montaña para ganar altura. Si miráis hacia abajo, veréis la carretera serpenteante que los ciclistas valientes (y locos) utilizan para bajar. El paisaje se vuelve más dramático, con cascadas que caen cientos de metros en caída libre."
+            },
+            {
+                id: 4,
+                title: "4. La Parada Mágica: Kjosfossen (40 - 50 min)",
+                text: "¡Atención! El tren se detiene. No hemos llegado al final, pero esta parada es obligatoria. Estamos frente a la imponente cascada de Kjosfossen. Bajad del tren unos minutos, sentid el rocío del agua en la cara y escuchad el rugido de la naturaleza. Si tenéis suerte y aguzáis la vista hacia las ruinas de piedra junto a la cascada, quizás veáis a la Huldra. Según la mitología nórdica, es una criatura del bosque, una mujer de belleza seductora que canta para atraer a los hombres a la montaña. En verano, los noruegos recrean esta leyenda con música y baile justo aquí, en medio de la nada."
+            },
+            {
+                id: 5,
+                title: "5. La Llegada: Myrdal y la Alta Montaña (50 - 60 min)",
+                text: "Volvemos al tren para el último empujón. Notaréis que la vegetación ha cambiado drásticamente. Los árboles desaparecen y dan paso a musgo, roca y, a menudo, nieve, incluso en verano. Estamos llegando a Myrdal, a 867 metros sobre el nivel del mar. Aquí es donde nuestro pequeño tren se encuentra con la línea principal que conecta Oslo con Bergen. El aire aquí arriba es puro y fresco. Hemos conquistado la montaña. Espero que este viaje vertical os haya robado el corazón tanto como a mí."
+            }
+        ];
 
         const INITIAL_ITINERARY = [
             {
@@ -278,13 +320,41 @@
         // --- COMPONENTS ---
 
         const ActivityDetailModal = ({ activity, onClose }) => {
+            const [playingTrackId, setPlayingTrackId] = useState(null);
+
+            // Cleanup audio on close
+            useEffect(() => {
+                return () => {
+                    window.speechSynthesis.cancel();
+                };
+            }, []);
+
             if (!activity) return null;
+
+            const toggleTrack = (track) => {
+                if (playingTrackId === track.id) {
+                    window.speechSynthesis.cancel();
+                    setPlayingTrackId(null);
+                } else {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(track.text);
+                    utterance.lang = 'es-ES';
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.0;
+                    
+                    utterance.onend = () => setPlayingTrackId(null);
+                    utterance.onerror = () => setPlayingTrackId(null);
+                    
+                    window.speechSynthesis.speak(utterance);
+                    setPlayingTrackId(track.id);
+                }
+            };
 
             return (
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                     <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] modal-content">
                         {/* Header */}
-                        <div className="bg-fjord-500 p-4 text-white relative">
+                        <div className="bg-fjord-500 p-4 text-white relative flex-shrink-0">
                             <h3 className="text-xl font-bold pr-8">{activity.title}</h3>
                             <div className="flex items-center text-fjord-100 text-sm mt-1">
                                 <Clock size={14} className="mr-1" />
@@ -297,6 +367,48 @@
                         
                         {/* Content */}
                         <div className="p-5 overflow-y-auto">
+                            {/* Audio Guide Section - ONLY FOR TRAIN (ID 4) */}
+                            {activity.id === '4' && (
+                                <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-inner">
+                                    <h4 className="flex items-center text-fjord-600 font-bold mb-3 border-b border-slate-200 pb-2">
+                                        <Headphones className="mr-2" size={20}/> Audioguía a Bordo
+                                    </h4>
+                                    <div className="space-y-3">
+                                        {TRAIN_AUDIO_GUIDE.map((track) => {
+                                            const isPlaying = playingTrackId === track.id;
+                                            return (
+                                                <div key={track.id} className={`p-3 rounded-lg border transition-all ${isPlaying ? 'bg-white border-blue-400 shadow-md' : 'bg-white border-slate-100'}`}>
+                                                    <div className="flex justify-between items-center">
+                                                        <div className="flex-1 pr-3">
+                                                            <h5 className={`text-sm font-bold ${isPlaying ? 'text-blue-600' : 'text-slate-700'}`}>
+                                                                {track.title}
+                                                            </h5>
+                                                            {isPlaying && (
+                                                                <div className="flex space-x-1 mt-1.5 h-3 items-end">
+                                                                    <div className="equalizer-bar w-0.5 bg-blue-500"></div>
+                                                                    <div className="equalizer-bar w-0.5 bg-blue-500"></div>
+                                                                    <div className="equalizer-bar w-0.5 bg-blue-500"></div>
+                                                                    <span className="text-[10px] text-blue-400 ml-1 font-mono">Reproduciendo...</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => toggleTrack(track)}
+                                                            className={`p-2 rounded-full flex-shrink-0 transition-all active:scale-95 ${isPlaying ? 'bg-red-100 text-red-500' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'}`}
+                                                        >
+                                                            {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-2 text-center italic">
+                                        Toca play para escuchar las explicaciones durante el recorrido.
+                                    </p>
+                                </div>
+                            )}
+
                             <div className="mb-4">
                                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Descripción</h4>
                                 <p className="text-gray-700 leading-relaxed">{activity.fullDescription || activity.description}</p>
@@ -460,6 +572,7 @@
                                                     </h3>
                                                 </div>
                                                 <div className="flex gap-2 pl-2 items-center">
+                                                    {act.id === '4' && <Headphones size={18} className="text-purple-500" />}
                                                     {act.webcamUrl && (
                                                         <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">
                                                             WEBCAM
