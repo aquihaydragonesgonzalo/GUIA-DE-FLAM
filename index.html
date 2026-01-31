@@ -107,13 +107,14 @@
         const UPDATE_DATE = "04 de diciembre de 2025";
         
         const COORDS = {
-            FLAM_DOCK: { lat: 60.8638, lng: 7.1187 },
-            FLAM_STATION: { lat: 60.8632, lng: 7.1145 },
-            MYRDAL: { lat: 60.7353, lng: 7.1226 },
-            AEGIR_PUB: { lat: 60.8638, lng: 7.1172 },
-            GUDVANGEN: { lat: 60.8812, lng: 6.8413 },
-            STEGASTEIN_VIEWPOINT: { lat: 60.9085, lng: 7.2123 },
-            VISITOR_CENTER: { lat: 60.8622, lng: 7.1115 }
+            FLAM_DOCK: { lat: 60.863772, lng: 7.119263 }, // EMBARCADERO CRUCERO
+            FLAM_DOCK_FJORD: { lat: 60.862935, lng: 7.116024 }, // EMBARCADERO CRUCERO FIORDOS
+            FLAM_STATION: { lat: 60.863059, lng: 7.114333 }, // ESTACIÓN DE TREN
+            MYRDAL: { lat: 60.735147, lng: 7.122816 }, // Myrdal
+            AEGIR_PUB: { lat: 60.863712, lng: 7.117184 }, // Ægir BrewPub
+            GUDVANGEN: { lat: 60.881375, lng: 6.841402 }, // Gudvangen
+            STEGASTEIN_VIEWPOINT: { lat: 60.90862, lng: 7.211877 }, // Mirador Stegastein
+            VISITOR_CENTER: { lat: 60.863359, lng: 7.114419 } // AUTOBUS MIRADOR / Centro Visitantes
         };
 
         const TRAIN_AUDIO_GUIDE = [
@@ -135,7 +136,7 @@
             {
                 id: 4,
                 title: "4. La Parada Mágica: Kjosfossen (40 - 50 min)",
-                text: "¡Atención! El tren se detiene. No hemos llegado al final, pero esta parada es obligatoria. Estamos frente a la imponente cascada de Kjosfossen. Bajad del tren unos minutos, sentid el rocío del agua en la cara y escuchad el rugido de la naturaleza.\n\nSi tenéis suerte y aguzáis la vista hacia las ruinas de piedra junto a la cascada, quizás veáis a la Huldra. Según la mitología nórdica, es una criatura del bosque, una mujer de belleza seductora que canta para atraer a los hombres a la montaña. En verano, los noruegos recrean esta leyenda con música y baile justo aquí, en medio de la nada."
+                text: "¡Atención! El tren se detiene. No hemos llegado al final, pero esta parada es obligatoria. Estamos frente a la imponente cascada de Kjosfossen. Bajad del tren unos minutos, sentid el rocío del agua en la cara y escuchad el rugido de la naturaleza.\n\nSi tenéis suerte y aguzáis la vista hacia las ruinas de piedra junto a la cascada, quizás veréis a la Huldra. Según la mitología nórdica, es una criatura del bosque, una mujer de belleza seductora que canta para atraer a los hombres a la montaña. En verano, los noruegos recrean esta leyenda con música y baile justo aquí, en medio de la nada."
             },
             {
                 id: 5,
@@ -181,7 +182,7 @@
             {
                 id: 2,
                 title: "2. Aurland: El Centro del Municipio (10 - 20 min)",
-                text: "Llegamos a Aurlandsvangen, el 'hermano mayor' de Flåm y centro administrativo de la zona. Aquí vive la gente de verdad, no solo turistas. ¿Veis esa iglesia de piedra blanca? Es la Vangen Kirke, construida en el año 1202. Es la iglesia de piedra más grande de toda la región de Sogn, un símbolo de poder en la época medieval.\n\nPero no nos detenemos aquí. Ahora empieza lo bueno. El autobús va a encarar la montaña. Respirad hondo si tenéis vértigo, porque vamos a subir por la famosa 'Carretera de la Nieve'."
+                text: "Llegamos a Aurlandsvangen, el 'hermano mayor' de Flåm y centro administrativo de la zona. Aquí vive la gente de verdad, no solo turistas. ¿Veis esa intención de piedra blanca? Es la Vangen Kirke, construida en el año 1202. Es la iglesia de piedra más grande de toda la región de Sogn, un símbolo de poder en la época medieval.\n\nPero no nos detenemos aquí. Ahora empieza lo bueno. El autobús va a encarar la montaña. Respirad hondo si tenéis vértigo, porque vamos a subir por la famosa 'Carretera de la Nieve'."
             },
             {
                 id: 3,
@@ -259,7 +260,7 @@
                 id: '5', title: 'Bebida en Ægir BrewPub', startTime: '10:40', endTime: '11:40',
                 locationName: 'Ægir BrewPub', coords: COORDS.AEGIR_PUB,
                 description: 'Edificio vikingo con chimenea de 9 metros.',
-                fullDescription: 'Un edificio inspirado en la mitología nórdica, con arquitectura de madera flotante, cabezas de dragón y una impresionante chimenea central de 9 metros de altura.',
+                fullDescription: 'Un edificio inspirado en la mitología nórdica, con arquitectura de madera flotante, cabezas de dragon y una impresionante chimenea central de 9 metros de altura.',
                 tips: '¡Tiempo para el festín! Disfruta de la chimenea y el ambiente vikingo antes del barco.',
                 keyDetails: 'Bebida en el pub vikingo (según presupuesto).',
                 priceNOK: 80, priceEUR: 8.50, type: 'food', completed: false,
@@ -269,7 +270,7 @@
             {
                 id: '6', title: 'Fjord Cruise + Bus', startTime: '12:00', endTime: '14:30',
                 locationName: 'Puerto Flåm', endLocationName: 'Gudvangen',
-                coords: COORDS.FLAM_DOCK, endCoords: COORDS.GUDVANGEN,
+                coords: COORDS.FLAM_DOCK_FJORD, endCoords: COORDS.GUDVANGEN,
                 description: 'Navegarás por el Nærøyfjord (UNESCO).',
                 fullDescription: 'Navegarás por el Nærøyfjord (Patrimonio UNESCO). Es la parte más estrecha y espectacular del fiordo, con cascadas y granjas aisladas en las laderas.',
                 tips: 'Logística: Toma la salida del barco eléctrico a las 12:00. Navegas Flåm → Gudvangen, y tomas el bus de vuelta (shuttle incluido en el ticket) a Flåm.',

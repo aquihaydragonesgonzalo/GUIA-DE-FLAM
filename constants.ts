@@ -1,18 +1,19 @@
 import { Activity, Pronunciation } from './types';
 
-export const SHIP_DEPARTURE_TIME = "17:30";
-export const SHIP_ONBOARD_TIME = "17:00";
+export const SHIP_DEPARTURE_TIME = "18:00";
+export const SHIP_ONBOARD_TIME = "17:45";
 export const DATE_OF_VISIT = "2026-05-14";
 
-// Coordinates
+// Coordinates actualizadas desde GPX
 const COORDS = {
-  FLAM_DOCK: { lat: 60.8638, lng: 7.1187 },
-  FLAM_STATION: { lat: 60.8632, lng: 7.1145 },
-  MYRDAL: { lat: 60.7353, lng: 7.1226 },
-  AEGIR_PUB: { lat: 60.8638, lng: 7.1172 },
-  GUDVANGEN: { lat: 60.8812, lng: 6.8413 },
-  STEGASTEIN_VIEWPOINT: { lat: 60.9085, lng: 7.2123 },
-  VISITOR_CENTER: { lat: 60.8622, lng: 7.1115 }
+  FLAM_DOCK: { lat: 60.863772, lng: 7.119263 },
+  FLAM_DOCK_FJORD: { lat: 60.862935, lng: 7.116024 },
+  FLAM_STATION: { lat: 60.863059, lng: 7.114333 },
+  MYRDAL: { lat: 60.735147, lng: 7.122816 },
+  AEGIR_PUB: { lat: 60.863712, lng: 7.117184 },
+  GUDVANGEN: { lat: 60.881375, lng: 6.841402 },
+  STEGASTEIN_VIEWPOINT: { lat: 60.90862, lng: 7.211877 },
+  VISITOR_CENTER: { lat: 60.863359, lng: 7.114419 }
 };
 
 export const INITIAL_ITINERARY: Activity[] = [
@@ -69,7 +70,7 @@ export const INITIAL_ITINERARY: Activity[] = [
     endTime: '14:30',
     locationName: 'Puerto Flåm',
     endLocationName: 'Gudvangen',
-    coords: COORDS.FLAM_DOCK,
+    coords: COORDS.FLAM_DOCK_FJORD,
     endCoords: COORDS.GUDVANGEN,
     description: 'Navegarás por el Nærøyfjord (UNESCO). Parte más estrecha y espectacular.',
     keyDetails: 'Logística: Salida barco eléctrico 12:00. Regreso en bus (shuttle incluido).',
